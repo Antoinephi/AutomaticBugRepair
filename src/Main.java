@@ -138,24 +138,36 @@ public class Main {
 	public static List<Failure> runTests(Class<?> testClass){
 		JUnitCore junit = new JUnitCore();
 		Result results = junit.run(testClass);
-		for(Failure failure : results.getFailures()){
-			System.out.println(failure);
-		}
+		System.out.println("Classe sous test: " +testClass.getName());
+		System.out.println("Nombre de fail: "+results.getFailureCount()+"/"+results.getRunCount());
+//		for(Failure failure : results.getFailures()){
+//			System.out.println(failure);
+//		}
 		return results.getFailures();
 	}
 	
 	public static void main(String[] args) throws Exception {
 		
 		long start = System.currentTimeMillis();
-		
+		final Integer LIMITE_NBR_PROJECT_FOR_DEV = 5;
 		deleteClassFiles(INPUT_DATASET);
 		System.out.println("=== Cleaned previous compiled class files === ");
 		List<String> sourceFolders = findSourceFolder(INPUT_DATASET);
 		Class<?> classe;
-		
+		int i = 0;
 		for(String folder : sourceFolders){
+			System.out.println("projet sous analyse: "+folder);
 			classe = compile(folder);
-			runTests(classe);
+			List<Failure> fails = runTests(classe);
+			if(!fails.isEmpty()){
+				launchSpoon(folder);
+			}
+			
+			if(i == LIMITE_NBR_PROJECT_FOR_DEV)
+				break;
+			i++;
+			System.out.println();
+			System.out.println();
 		}
 
 		System.out.println("\n\nTime taken : " + (System.currentTimeMillis() - start) / 1000 + " sec");
