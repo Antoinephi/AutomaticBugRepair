@@ -1,9 +1,5 @@
 package processors;
 
-import org.junit.runner.JUnitCore;
-import org.junit.runner.Result;
-import org.junit.runner.notification.Failure;
-
 import spoon.processing.AbstractProcessor;
 import spoon.reflect.declaration.CtClass;
 
@@ -12,8 +8,7 @@ public class TestProcessor extends AbstractProcessor<CtClass<?>> {
 	public void init(){
 //		System.out.println(this.getEnvironment().toString());
 	}
-
-	@Override
+	
 	public void process(CtClass<?> c) {
 		if(c.getSimpleName().contains("Test")){
 			Class<?> classe = null;
