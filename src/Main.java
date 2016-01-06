@@ -104,7 +104,7 @@ public class Main {
 //				System.out.println(file);
 		}
 		for(String file : listTestFiles)
-			compiler.run(null, null, null, "-cp", sourcePath + "/main/java:../junit4-4.11.jar", file);
+			compiler.run(null, null, null, "-cp", sourcePath + "/main/java:junit4-4.11.jar", file);
 		
 //		System.out.println(sourcePath);
 		classLoader = URLClassLoader.newInstance(new URL[] {
