@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import javax.tools.JavaCompiler;
 import javax.tools.ToolProvider;
@@ -51,8 +52,10 @@ public class Main {
 	}
 	
 	private static String convertToClassName(String file) {
-		int ind = file.split(File.separator).length;
-		return file.split(File.separator)[ind-2] + "." + file.split(File.separator)[ind -1].replace(".java", "");
+		String pattern = Pattern.quote(File.separator);
+		int ind = file.split(pattern).length;
+		//int ind = file.split(File.separator).length;
+		return file.split(pattern)[ind-2] + "." + file.split(pattern)[ind -1].replace(".java", "");
 	}
 	
 	private static List<String> findSourceFolder(String path){
@@ -104,7 +107,7 @@ public class Main {
 //				System.out.println(file);
 		}
 		for(String file : listTestFiles)
-			compiler.run(null, null, null, "-cp", sourcePath + "/main/java:junit4-4.11.jar", file);
+			compiler.run(null, null, null, "-cp", sourcePath + "/main/java"+File.pathSeparator+"junit4-4.11.jar", file);
 		
 //		System.out.println(sourcePath);
 		classLoader = URLClassLoader.newInstance(new URL[] {
