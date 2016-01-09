@@ -24,9 +24,13 @@ public class Main {
 	private static final String INPUT_DATASET = ".." + File.separator + "IntroClassJava" + File.separator + "dataset";
 	private static final String WHITEBOX_TEST = "WhiteboxTest";
 	private static final String BLACKBOX_TEST = "BlackboxTest";
+	private static final String SPOON_REPERTOIRE= "./spooned";
+	private static final String END_TEST_NAME = "Test.java";
 			
 	
 	private static URLClassLoader classLoader;
+	public static List<String> listSourceFiles;
+	public static List<String> listTestFiles;
 	
 	private static void launchSpoon(String projectPath) throws Exception{
 		
@@ -38,24 +42,16 @@ public class Main {
 		
 	}
 	
-	private static List<String> findTestFolder(String path, String color) {
-		File[] files = new File(path).listFiles();
-		List<String> pathToSources = new ArrayList<String>();
-		for (File f : files) {
-			if (f.isDirectory())
-				pathToSources.addAll(findTestFolder(f.getAbsolutePath(), color));
-			else if (f.getName().endsWith(color + ".java"))
-				pathToSources.add(f.getAbsolutePath());
-		}
-
-		return pathToSources;
-	}
-	
 	private static String convertToClassName(String file) {
 		String pattern = Pattern.quote(File.separator);
 		int ind = file.split(pattern).length;
-		//int ind = file.split(File.separator).length;
 		return file.split(pattern)[ind-2] + "." + file.split(pattern)[ind -1].replace(".java", "");
+	}
+	
+	private static String convertToClassNameWithoutPackage(String file) {
+		String pattern = Pattern.quote(File.separator);
+		int ind = file.split(pattern).length;
+		return file.split(pattern)[ind -1].replace(".java", "");
 	}
 	
 	private static List<String> findSourceFolder(String path){
@@ -71,14 +67,16 @@ public class Main {
 		return pathToSources;
 	}
 	
-	private static List<String> findJavaFiles(String path){
+	private static List<String> findJavaFiles(String path, String classUnderTest){
 		File[] files = new File(path).listFiles();
 		List<String> pathToSources = new ArrayList<String>();
 		for(File f : files){
 			if(f.isDirectory())
-				pathToSources.addAll(findJavaFiles(f.getAbsolutePath()));
-			else if(f.getName().endsWith(".java"))
+				pathToSources.addAll(findJavaFiles(f.getAbsolutePath(),classUnderTest));
+			else if((classUnderTest == null && f.getName().endsWith(".java")) ||
+					(classUnderTest != null && f.getName().contains(classUnderTest) && f.getName().endsWith(".java"))){
 				pathToSources.add(f.getAbsolutePath());
+			}
 		}
 		
 		return pathToSources;
@@ -96,36 +94,45 @@ public class Main {
 	}
 
 	
-	public static Class<?> compile(String sourcePath) throws MalformedURLException{
+	public static Class<?> compile(String sourcePath, String classUnderTest) throws MalformedURLException{
 		JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+		String repertoireMain = "";
+		String repertoireTest="";
 		
-		List<String> listSourceFiles = findJavaFiles(sourcePath + "/main/java");
-		List<String> listTestFiles = findJavaFiles(sourcePath + "/test/java");
+		if(classUnderTest == null){
+			repertoireMain = "/main/java";
+			repertoireTest = "/test/java";
+
+		}
+		
+		listSourceFiles = findJavaFiles(sourcePath + repertoireMain,classUnderTest);
+		listTestFiles = findJavaFiles(sourcePath + repertoireTest,classUnderTest);
+		
+
 
 		for(String file : listSourceFiles){
+			if(!file.endsWith(END_TEST_NAME))
 				compiler.run(null, null, null, file);
-//				System.out.println(file);
 		}
 		for(String file : listTestFiles)
-			compiler.run(null, null, null, "-cp", sourcePath + "/main/java"+File.pathSeparator+"junit4-4.11.jar", file);
+			if(file.endsWith(END_TEST_NAME))
+				compiler.run(null, null, null, "-cp", sourcePath + repertoireMain+File.pathSeparator+"junit4-4.11.jar", file);
 		
-//		System.out.println(sourcePath);
 		classLoader = URLClassLoader.newInstance(new URL[] {
-				new File(sourcePath + "/main/java/").toURI().toURL(), new File(sourcePath +"/test/java/").toURI().toURL()
+				new File(sourcePath + repertoireMain).toURI().toURL(), new File(sourcePath +repertoireTest).toURI().toURL()
 		});
 		
 		Class<?> classe = null;
 		
 	      try {
 	  		for(String file : listSourceFiles)
-	    		  Class.forName(convertToClassName(file), true, classLoader);
+				if(!file.endsWith(END_TEST_NAME))
+					Class.forName(convertToClassName(file), true, classLoader);
 	  		for(String file : listTestFiles)
-	  			if(file.contains("Whitebox"))
+	  			if(file.contains(WHITEBOX_TEST))
 	  				classe = Class.forName(convertToClassName(file), true, classLoader);
 
-	  		
-//	          System.out.println("DOOOOOOOOOONE");
-	       }
+	  	       }
 	       catch(Exception e) {
 	    	   e.printStackTrace();
 	          System.out.println("Impossible d'instancier la classe");
@@ -157,11 +164,15 @@ public class Main {
 		int i = 0;
 		for(String folder : sourceFolders){
 			System.out.println("projet sous analyse: "+folder);
-			classe = compile(folder);
+			classe = compile(folder, null);
 			List<Failure> fails = runTests(classe);
 			if(!fails.isEmpty()){
 				launchSpoon(folder);
 			}
+			System.out.println();
+			System.out.println("résultat après spoon:");
+			classe = compile(SPOON_REPERTOIRE, convertToClassNameWithoutPackage(listSourceFiles.get(0)));
+			runTests(classe);
 			
 			if(i == LIMITE_NBR_PROJECT_FOR_DEV)
 				break;
@@ -171,11 +182,5 @@ public class Main {
 		}
 
 		System.out.println("\n\nTime taken : " + (System.currentTimeMillis() - start) / 1000 + " sec");
-				
-//		List<String> list = findSourceFolder(INPUT_DATASET);
-//		for(String s : list){
-//			System.out.println("Launching Spoon on " + s.split("\\\\")[6] + " " + s.split("\\\\")[7]+ " " +  s.split("\\\\")[8]);
-//			launchSpoon(s);
-//		}
 	}
 }
