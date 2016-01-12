@@ -12,7 +12,7 @@ public class TestProcessor extends AbstractProcessor<CtClass<?>> {
 	public void process(CtClass<?> c) {
 		if(c.getSimpleName().contains("Test")){
 			Class<?> classe = null;
-			System.out.println("spoon "+c.getSimpleName());
+			System.out.println(c.getParent().getParent()+"."+c.getParent() + "."+c.getParent() + "."+c.getParent() + "."+c.getParent() + "."+c.getParent() + "." +c.getSimpleName());
 //		      try {
 //		          classe = Class.forName(c.getParent()+"."+c.getSimpleName());
 //		          System.out.println("DOOOOOOOOOONE");

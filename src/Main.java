@@ -3,8 +3,6 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -16,29 +14,39 @@ import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
 
+import processors.IntMutatorProcessor;
 import spoon.Launcher;
+import spoon.processing.AbstractProcessor;
 
 public class Main {
 
-	private static final String INPUT_PROCESSOR = "processors.TestProcessor";
+	private static final String INPUT_PROCESSOR = "processors.IntMutatorProcessor";
 	private static final String INPUT_DATASET = ".." + File.separator + "IntroClassJava" + File.separator + "dataset";
 	private static final String WHITEBOX_TEST = "WhiteboxTest";
 	private static final String BLACKBOX_TEST = "BlackboxTest";
 	private static final String SPOON_REPERTOIRE= "./spooned";
 	private static final String END_TEST_NAME = "Test.java";
+	private static AbstractProcessor<?> currentProcessor;
 			
 	
 	private static URLClassLoader classLoader;
 	public static List<String> listSourceFiles;
 	public static List<String> listTestFiles;
 	
-	private static void launchSpoon(String projectPath) throws Exception{
+	private static void launchSpoon(String projectPath, AbstractProcessor<?> p) throws Exception{
 		
-		String[] spoonArgs = { "-i", projectPath,
+		/*String[] spoonArgs = { "-i", projectPath,
 				"-p", INPUT_PROCESSOR, "-x"
 		};
-		
 		Launcher.main(spoonArgs);
+*/
+		String[] spoonArgs = { "-i", projectPath,
+				"-p", "-x"
+		};
+		
+			Launcher l = new Launcher();
+			l.addProcessor(p);
+			l.run(spoonArgs);
 		
 	}
 	
@@ -162,24 +170,35 @@ public class Main {
 		List<String> sourceFolders = findSourceFolder(INPUT_DATASET);
 		Class<?> classe;
 		int i = 0;
-		for(String folder : sourceFolders){
-			System.out.println("projet sous analyse: "+folder);
-			classe = compile(folder, null);
-			List<Failure> fails = runTests(classe);
-			if(!fails.isEmpty()){
-				launchSpoon(folder);
+		List<Failure> spoon_mutated_results;
+			for(String folder : sourceFolders){
+//					System.out.println("projet sous analyse: "+folder);
+				currentProcessor = new IntMutatorProcessor();
+				boolean done = false;
+				do {
+					classe = compile(folder, null);
+					List<Failure> fails = runTests(classe);
+		
+						if(!fails.isEmpty()){
+							try {
+								launchSpoon(folder, currentProcessor);
+							} catch(NullPointerException e){
+								done = true;
+							}
+						}
+	//						System.out.println();
+	//						System.out.println("r√©sultat apr√®s spoon:");
+						classe = compile(SPOON_REPERTOIRE, convertToClassNameWithoutPackage(listSourceFiles.get(0)));
+						spoon_mutated_results = runTests(classe);
+				}while(!done);
+
+				if(i <= LIMITE_NBR_PROJECT_FOR_DEV)
+					break;
+				i++;
+//				System.out.println();
+//				System.out.println();
 			}
-			System.out.println();
-			System.out.println("rÈsultat aprËs spoon:");
-			classe = compile(SPOON_REPERTOIRE, convertToClassNameWithoutPackage(listSourceFiles.get(0)));
-			runTests(classe);
-			
-			if(i == LIMITE_NBR_PROJECT_FOR_DEV)
-				break;
-			i++;
-			System.out.println();
-			System.out.println();
-		}
+
 
 		System.out.println("\n\nTime taken : " + (System.currentTimeMillis() - start) / 1000 + " sec");
 	}
