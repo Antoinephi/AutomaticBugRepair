@@ -3,9 +3,8 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -16,7 +15,9 @@ import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
 
+import processors.BinaryOperatorProcessor;
 import spoon.Launcher;
+import spoon.processing.AbstractProcessor;
 
 public class Main {
 
@@ -26,34 +27,44 @@ public class Main {
 	private static final String BLACKBOX_TEST = "BlackboxTest";
 	private static final String SPOON_REPERTOIRE= "./spooned";
 	private static final String END_TEST_NAME = "Test.java";
-			
+	private static BinaryOperatorProcessor binaryOperatorProcessor = new BinaryOperatorProcessor();
 	
 	private static URLClassLoader classLoader;
 	public static List<String> listSourceFiles;
 	public static List<String> listTestFiles;
 	
-	private static void launchSpoon(String projectPath) throws Exception{
+	private static void launchSpoon(String projectPath, AbstractProcessor<?> p) throws Exception{
 		
-		String[] spoonArgs = { "-i", projectPath,
-				"-p", INPUT_PROCESSOR, "-x"
+//		String[] spoonArgs = { "-i", projectPath,
+//				"-p", INPUT_PROCESSOR, "-x"
+//		};
+//		
+//		Launcher.main(spoonArgs);
+		
+		String[] spoonArgs = { "-i", projectPath, "-x"
 		};
 		
-		Launcher.main(spoonArgs);
+			Launcher l = new Launcher();
+			l.addProcessor(p);
+			l.run(spoonArgs);
 		
 	}
 	
+	/* transforme le nom d un fichier en nom de classe*/
 	private static String convertToClassName(String file) {
 		String pattern = Pattern.quote(File.separator);
 		int ind = file.split(pattern).length;
 		return file.split(pattern)[ind-2] + "." + file.split(pattern)[ind -1].replace(".java", "");
 	}
 	
+	/* transforme le nom d un fichier en nom de classe sans son package*/
 	private static String convertToClassNameWithoutPackage(String file) {
 		String pattern = Pattern.quote(File.separator);
 		int ind = file.split(pattern).length;
 		return file.split(pattern)[ind -1].replace(".java", "");
 	}
 	
+	/* permet de recuperer les repertoires de chaque projet*/
 	private static List<String> findSourceFolder(String path){
 		File[] files = new File(path).listFiles();
 		List<String> pathToSources = new ArrayList<String>();
@@ -67,6 +78,7 @@ public class Main {
 		return pathToSources;
 	}
 	
+	/*Permet de recuperer tous les fichiers java d un projet ou uniquement le fichier de nom classUnderTest il n'est pas null*/
 	private static List<String> findJavaFiles(String path, String classUnderTest){
 		File[] files = new File(path).listFiles();
 		List<String> pathToSources = new ArrayList<String>();
@@ -93,7 +105,6 @@ public class Main {
 		
 	}
 
-	
 	public static Class<?> compile(String sourcePath, String classUnderTest) throws MalformedURLException{
 		JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
 		String repertoireMain = "";
@@ -145,39 +156,57 @@ public class Main {
 		
 	}
 	
-	public static List<Failure> runTests(Class<?> testClass){
+	public static int runTests(Class<?> testClass){
 		JUnitCore junit = new JUnitCore();
 		Result results = junit.run(testClass);
-		System.out.println("Classe sous test: " +testClass.getName());
-		System.out.println("Nombre de fail: "+results.getFailureCount()+"/"+results.getRunCount());
-		
-	
-		return results.getFailures();
+		return results.getFailures() != null ? results.getFailures().size() : 0;
 	}
 	
 	public static void main(String[] args) throws Exception {
 		
 		long start = System.currentTimeMillis();
-		final Integer LIMITE_NBR_PROJECT_FOR_DEV = 1;
-		deleteClassFiles(INPUT_DATASET);
+		final Integer LIMITE_NBR_PROJECT_FOR_DEV = 50;
+
 		System.out.println("=== Cleaned previous compiled class files === ");
+		//on recupere les projets
 		List<String> sourceFolders = findSourceFolder(INPUT_DATASET);
 		Class<?> classe;
-		int i = 0;
+		int i = 1;
+
 		for(String folder : sourceFolders){
+			deleteClassFiles(INPUT_DATASET);
 			System.out.println("projet sous analyse: "+folder);
+			//compilation des classes du projet courant
 			classe = compile(folder, null);
-			List<Failure> fails = runTests(classe);
-			int nbrFail = fails.size();
-			if(!fails.isEmpty()){
-				launchSpoon(folder);
+			//lancement des tests et sauvegarde du nombre de fail initial
+			int nbrFail = runTests(classe);
+			System.out.println("Nbr fail initial: "+nbrFail);
+			//on reinitialise les attributs static du processeur pour eviter d'interferer entre les projets
+			BinaryOperatorProcessor.raz(convertToClassNameWithoutPackage(listSourceFiles.get(0)));
+			if(nbrFail > 0){
+				//premier lancement de spoon, permet de generer la première version des projets dans spooned
+				launchSpoon(folder,binaryOperatorProcessor);
+				
+				//tant qu il reste des possiblites de mutation on boucle sur les projets generes par spoon
+				while(BinaryOperatorProcessor.terminated != true){
+					deleteClassFiles(SPOON_REPERTOIRE);
+					launchSpoon(SPOON_REPERTOIRE, binaryOperatorProcessor);
+					classe = compile(SPOON_REPERTOIRE, convertToClassNameWithoutPackage(listSourceFiles.get(0)));
+					int nbrFailAfterSpoon = runTests(classe);
+					if(nbrFailAfterSpoon < nbrFail){
+						nbrFail = nbrFailAfterSpoon;
+						BinaryOperatorProcessor.better = true;
+					}
+				}
+				
+				//on lance spoon une derniere fois pour que les meilleurs mutations trouvees soient restorees
+				deleteClassFiles(SPOON_REPERTOIRE);
+				launchSpoon(SPOON_REPERTOIRE, binaryOperatorProcessor);
 			}
-			System.out.println();
-			System.out.println("resultat apres spoon:");
 			classe = compile(SPOON_REPERTOIRE, convertToClassNameWithoutPackage(listSourceFiles.get(0)));
-			runTests(classe);
-			
-			if(i == LIMITE_NBR_PROJECT_FOR_DEV)
+			System.out.println("nbr fail final: "+runTests(classe));
+
+			if(i >= LIMITE_NBR_PROJECT_FOR_DEV)
 				break;
 			i++;
 			System.out.println();
