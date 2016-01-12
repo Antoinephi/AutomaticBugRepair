@@ -20,7 +20,7 @@ import spoon.Launcher;
 
 public class Main {
 
-	private static final String INPUT_PROCESSOR = "processors.TestProcessor";
+	private static final String INPUT_PROCESSOR = "processors.BinaryOperatorProcessor";
 	private static final String INPUT_DATASET = ".." + File.separator + "IntroClassJava" + File.separator + "dataset";
 	private static final String WHITEBOX_TEST = "WhiteboxTest";
 	private static final String BLACKBOX_TEST = "BlackboxTest";
@@ -114,9 +114,10 @@ public class Main {
 			if(!file.endsWith(END_TEST_NAME))
 				compiler.run(null, null, null, file);
 		}
-		for(String file : listTestFiles)
+		for(String file : listTestFiles){
 			if(file.endsWith(END_TEST_NAME))
 				compiler.run(null, null, null, "-cp", sourcePath + repertoireMain+File.pathSeparator+"junit4-4.11.jar", file);
+		}
 		
 		classLoader = URLClassLoader.newInstance(new URL[] {
 				new File(sourcePath + repertoireMain).toURI().toURL(), new File(sourcePath +repertoireTest).toURI().toURL()
@@ -125,14 +126,16 @@ public class Main {
 		Class<?> classe = null;
 		
 	      try {
-	  		for(String file : listSourceFiles)
+	  		for(String file : listSourceFiles){
 				if(!file.endsWith(END_TEST_NAME))
 					Class.forName(convertToClassName(file), true, classLoader);
-	  		for(String file : listTestFiles)
+	  		}
+	  		for(String file : listTestFiles){
 	  			if(file.contains(WHITEBOX_TEST))
 	  				classe = Class.forName(convertToClassName(file), true, classLoader);
+	  		}
 
-	  	       }
+	  	   }
 	       catch(Exception e) {
 	    	   e.printStackTrace();
 	          System.out.println("Impossible d'instancier la classe");
@@ -147,16 +150,15 @@ public class Main {
 		Result results = junit.run(testClass);
 		System.out.println("Classe sous test: " +testClass.getName());
 		System.out.println("Nombre de fail: "+results.getFailureCount()+"/"+results.getRunCount());
-//		for(Failure failure : results.getFailures()){
-//			System.out.println(failure);
-//		}
+		
+	
 		return results.getFailures();
 	}
 	
 	public static void main(String[] args) throws Exception {
 		
 		long start = System.currentTimeMillis();
-		final Integer LIMITE_NBR_PROJECT_FOR_DEV = 5;
+		final Integer LIMITE_NBR_PROJECT_FOR_DEV = 1;
 		deleteClassFiles(INPUT_DATASET);
 		System.out.println("=== Cleaned previous compiled class files === ");
 		List<String> sourceFolders = findSourceFolder(INPUT_DATASET);
@@ -166,11 +168,12 @@ public class Main {
 			System.out.println("projet sous analyse: "+folder);
 			classe = compile(folder, null);
 			List<Failure> fails = runTests(classe);
+			int nbrFail = fails.size();
 			if(!fails.isEmpty()){
 				launchSpoon(folder);
 			}
 			System.out.println();
-			System.out.println("résultat après spoon:");
+			System.out.println("resultat apres spoon:");
 			classe = compile(SPOON_REPERTOIRE, convertToClassNameWithoutPackage(listSourceFiles.get(0)));
 			runTests(classe);
 			
