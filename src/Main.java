@@ -1,5 +1,9 @@
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -27,6 +31,7 @@ public class Main {
 	private static final String BLACKBOX_TEST = "BlackboxTest";
 	private static final String SPOON_REPERTOIRE= "./spooned";
 	private static final String END_TEST_NAME = "Test.java";
+	private static final String PACKAGE ="introclassJava.";
 	private static BinaryOperatorProcessor binaryOperatorProcessor = new BinaryOperatorProcessor();
 	
 	private static URLClassLoader classLoader;
@@ -129,7 +134,6 @@ public class Main {
 			if(file.endsWith(END_TEST_NAME))
 				compiler.run(null, null, null, "-cp", sourcePath + repertoireMain+File.pathSeparator+"junit4-4.11.jar", file);
 		}
-		
 		classLoader = URLClassLoader.newInstance(new URL[] {
 				new File(sourcePath + repertoireMain).toURI().toURL(), new File(sourcePath +repertoireTest).toURI().toURL()
 		});
@@ -137,6 +141,11 @@ public class Main {
 		Class<?> classe = null;
 		
 	      try {
+	    	  
+	    	if(classUnderTest != null){
+	    		 classe = classLoader.loadClass(PACKAGE+classUnderTest+WHITEBOX_TEST);
+	    		 return classe;
+	    	}
 	  		for(String file : listSourceFiles){
 				if(!file.endsWith(END_TEST_NAME))
 					Class.forName(convertToClassName(file), true, classLoader);
@@ -159,13 +168,14 @@ public class Main {
 	public static int runTests(Class<?> testClass){
 		JUnitCore junit = new JUnitCore();
 		Result results = junit.run(testClass);
+
 		return results.getFailures() != null ? results.getFailures().size() : 0;
 	}
 	
 	public static void main(String[] args) throws Exception {
 		
 		long start = System.currentTimeMillis();
-		final Integer LIMITE_NBR_PROJECT_FOR_DEV = 50;
+		final Integer LIMITE_NBR_PROJECT_FOR_DEV = 3;
 
 		System.out.println("=== Cleaned previous compiled class files === ");
 		//on recupere les projets
@@ -184,15 +194,13 @@ public class Main {
 			//on reinitialise les attributs static du processeur pour eviter d'interferer entre les projets
 			BinaryOperatorProcessor.raz(convertToClassNameWithoutPackage(listSourceFiles.get(0)));
 			if(nbrFail > 0){
-				//premier lancement de spoon, permet de generer la première version des projets dans spooned
-				launchSpoon(folder,binaryOperatorProcessor);
-				
 				//tant qu il reste des possiblites de mutation on boucle sur les projets generes par spoon
 				while(BinaryOperatorProcessor.terminated != true){
 					deleteClassFiles(SPOON_REPERTOIRE);
 					launchSpoon(SPOON_REPERTOIRE, binaryOperatorProcessor);
 					classe = compile(SPOON_REPERTOIRE, convertToClassNameWithoutPackage(listSourceFiles.get(0)));
 					int nbrFailAfterSpoon = runTests(classe);
+					System.out.println("nbr fail apres mutation "+nbrFailAfterSpoon);
 					if(nbrFailAfterSpoon < nbrFail){
 						nbrFail = nbrFailAfterSpoon;
 						BinaryOperatorProcessor.better = true;
