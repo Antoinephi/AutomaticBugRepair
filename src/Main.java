@@ -1,11 +1,12 @@
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Pattern;
 
-
 import processors.BinaryOperatorProcessor;
+import processors.IntMutatorProcessor;
 import spoon.Launcher;
 import spoon.processing.AbstractProcessor;
 
@@ -22,6 +23,8 @@ public class Main {
 	
 	public static List<String> listSourceFiles;
 	public static List<String> listTestFiles;
+	
+	private static List<AbstractProcessor<?>> listProcessors  = new LinkedList<AbstractProcessor<?>>();
 	
 	private static void launchSpoon(String projectPath, AbstractProcessor<?> p) throws Exception{
 		
@@ -105,7 +108,10 @@ public class Main {
 		long start = System.currentTimeMillis();
 		final Integer LIMITE_NBR_PROJECT_FOR_DEV = 3;
 		TestLauncher testLauncher = new TestLauncher();
-
+		listProcessors.add(new BinaryOperatorProcessor());
+		listProcessors.add(new IntMutatorProcessor());
+		
+		
 		List<String> sourceFolders = findSourceFolder(INPUT_DATASET);
 		int i = 1;
 
