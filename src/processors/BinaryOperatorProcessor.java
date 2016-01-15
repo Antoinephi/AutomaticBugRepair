@@ -18,7 +18,7 @@ public class BinaryOperatorProcessor extends AbstractProcessor<CtBinaryOperator<
 	public static List<BinaryOperatorKind> binaryOperatorBoolean = new ArrayList<>();
 	public static List<BinaryOperatorKind> binaryOperatorShift = new ArrayList<>();
 	public static List<BinaryOperatorKind> binaryOperatorLogic = new ArrayList<>();
-	
+	public static boolean alreadyMuted = false;
 	/* Map qui permet de retrouver le nombre de tentative restante par CtBinaryOperator*/
 	public static Map<Integer, Integer> nbrTentativeRestanteParCtBinaryOperator;
 	
@@ -94,7 +94,6 @@ public class BinaryOperatorProcessor extends AbstractProcessor<CtBinaryOperator<
 	 * Si il n y a plus de tentative possible on set l operateur qui a obtenu le meilleur resultat*/
 	private void nextMutation(CtBinaryOperator<?> binaryOperatorLine, List<BinaryOperatorKind> binaryOperatorContainer) {
 		
-		//TODO stopper le processor entre chaque mutation
 		Integer nbrTentativeRestante = nbrTentativeRestanteParCtBinaryOperator.get(generateIdentifier(binaryOperatorLine));
 		if(nbrTentativeRestante == null){
 			nbrTentativeRestante = binaryOperatorContainer.size()-1;
@@ -104,15 +103,15 @@ public class BinaryOperatorProcessor extends AbstractProcessor<CtBinaryOperator<
 			binaryOperatorLine.setKind(bestBinaryOperator.get(generateIdentifier(binaryOperatorLine)));
 			return;
 		}
-		
-		binaryOperatorLine.setKind(binaryOperatorContainer.get(nbrTentativeRestante));
-		nbrTentativeRestante--;
-		nbrTentativeRestanteParCtBinaryOperator.put(generateIdentifier(binaryOperatorLine),nbrTentativeRestante);
-
+		if(!alreadyMuted){
+			binaryOperatorLine.setKind(binaryOperatorContainer.get(nbrTentativeRestante));
+			nbrTentativeRestante--;
+			nbrTentativeRestanteParCtBinaryOperator.put(generateIdentifier(binaryOperatorLine),nbrTentativeRestante);
+			alreadyMuted = true;
+		}
 	}
 	
 	/* genere un identifiant unique pour stocker les valeurs dans les maps*/
-	//TODO generer un vrai identifiant unique..
 	private int generateIdentifier(CtBinaryOperator<?> operator){
 		return (operator.getRightHandOperand()+operator.getLeftHandOperand().toString()).hashCode();
 	}

@@ -1,6 +1,10 @@
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -19,6 +23,7 @@ public class Main {
 	private static final String SPOON_CLASS_REPERTOIRE="spooned-classes";
 	private static final String END_TEST_NAME = "Test.java";
 	private static final String PACKAGE ="introclassJava.";
+	private static final String FILE_RESULT_NAME ="result.txt";
 	private static BinaryOperatorProcessor binaryOperatorProcessor = new BinaryOperatorProcessor();
 	
 	public static List<String> listSourceFiles;
@@ -28,7 +33,12 @@ public class Main {
 	
 	private static void launchSpoon(String projectPath, AbstractProcessor<?> p) throws Exception{
 		
-		String[] spoonArgs = { "-i", projectPath, "--compile"};
+		String repertoireCible = projectPath;
+		String pattern = Pattern.quote(File.separator);
+		if(projectPath.split(pattern).length > 2){
+			repertoireCible = SPOON_REPERTOIRE+File.separator+generateRepertoireName(projectPath);
+		}
+		String[] spoonArgs = { "-i", projectPath, "--compile", "-o", repertoireCible};
 		
 			Launcher l = new Launcher();
 			if(p!=null){
@@ -43,6 +53,12 @@ public class Main {
 		String pattern = Pattern.quote(File.separator);
 		int ind = file.split(pattern).length;
 		return file.split(pattern)[ind-2] + "." + file.split(pattern)[ind -1].replace(".java", "");
+	}
+	
+	private static String generateRepertoireName(String projectPath) {
+		String pattern = Pattern.quote(File.separator);
+		String[] chaines = projectPath.split(pattern);
+		return chaines[chaines.length-4]+"-"+chaines[chaines.length-3]+"-"+chaines[chaines.length-2];
 	}
 	
 	/* permet de recuperer les repertoires de chaque projet*/
@@ -102,6 +118,36 @@ public class Main {
 		return whiteTest.replace(WHITEBOX_TEST, "").replace(PACKAGE, "");
 	}
 	
+	public static void addResultToFile(String folderName, int nbrFailInitial, int nbrFailFinal){
+		String ligne = "projet: "+folderName+" nombre fail initial: "+nbrFailInitial+" nombre de fail final: "+nbrFailFinal+"\n";
+		addLigneToResult(ligne);	
+	}
+	
+	public static void addDateToFile(){
+		DateFormat fullDateFormat = DateFormat.getDateTimeInstance(DateFormat.FULL,DateFormat.FULL);
+		addLigneToResult(fullDateFormat.format(new Date())+"\n\n");
+	}
+
+	private static void addLigneToResult(String ligne) {
+		FileWriter dw = null;
+		try {
+			dw = new FileWriter(FILE_RESULT_NAME,true);
+			dw.write(ligne);
+			dw.flush();
+			dw.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}finally {
+			try {
+				dw.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+	
 	public static void main(String[] args) throws Exception {
 		
 		long start = System.currentTimeMillis();
@@ -109,42 +155,44 @@ public class Main {
 		TestLauncher testLauncher = new TestLauncher();
 		listProcessors.add(new BinaryOperatorProcessor());
 		listProcessors.add(new IntMutatorProcessor());
+		addDateToFile();
 		
-		
-		List<String> sourceFolders = findSourceFolder(INPUT_DATASET);
+		List<String> sourceFolders = new ArrayList<String>();//findSourceFolder(INPUT_DATASET);
+		sourceFolders.add("C:\\Users\\kevin\\Desktop\\wk-spoon\\IntroClassJava\\dataset\\checksum\\2c1556672751734adf9a561fbf88767c32224fca14a81e9d9c719f18d0b21765038acc16ecd8377f74d4f43e8c844538161d869605e3516cf797d0a6a59f1f8e\\003\\src");
+		sourceFolders.add("C:\\Users\\kevin\\Desktop\\wk-spoon\\IntroClassJava\\dataset\\checksum\\2c1556672751734adf9a561fbf88767c32224fca14a81e9d9c719f18d0b21765038acc16ecd8377f74d4f43e8c844538161d869605e3516cf797d0a6a59f1f8e\\005\\src");
+
 		int i = 1;
 
 		for(String folder : sourceFolders){
-			System.out.println("projet sous analyse: "+folder);
-			System.out.println("Création du projet dans spooned");
+			String repertoireName = SPOON_REPERTOIRE+File.separator+generateRepertoireName(folder);
 			String whiteTestCurrent = getWhiteTestClassNameFromProject(folder);
 			deleteClassFiles(SPOON_CLASS_REPERTOIRE);
 			launchSpoon(folder,null);
 			
 			int nbrFailInit = testLauncher.runTests(whiteTestCurrent);
-			System.out.println("Nombre de fail initial:"+nbrFailInit);
+			int lowestFail = nbrFailInit;
 
 			//on reinitialise les attributs static du processeur pour eviter d'interferer entre les projets
 			BinaryOperatorProcessor.raz((getMainClassNameFromProjectWithoutPackage(folder)));
-			if(nbrFailInit > 0){
+			if(lowestFail > 0){
 				//tant qu il reste des possiblites de mutation on boucle sur les projets generes par spoon
 				while(BinaryOperatorProcessor.terminated != true){
-					deleteClassFiles(SPOON_CLASS_REPERTOIRE);
-					launchSpoon(SPOON_REPERTOIRE, binaryOperatorProcessor);
+					BinaryOperatorProcessor.alreadyMuted = false;
+					deleteClassFiles(repertoireName);
+					launchSpoon(repertoireName, binaryOperatorProcessor);
 
 					int nbrFailAfterSpoon = testLauncher.runTests(whiteTestCurrent);
-					System.out.println("nbr fail apres mutation "+nbrFailAfterSpoon);
-					if(nbrFailAfterSpoon < nbrFailInit){
-						nbrFailInit = nbrFailAfterSpoon;
+					if(nbrFailAfterSpoon < lowestFail){
+						lowestFail = nbrFailAfterSpoon;
 						BinaryOperatorProcessor.better = true;
 					}
 				}
 				//on lance spoon une derniere fois pour que les meilleurs mutations trouvees soient restorees
-				deleteClassFiles(SPOON_CLASS_REPERTOIRE);
-				launchSpoon(SPOON_REPERTOIRE, binaryOperatorProcessor);
+				deleteClassFiles(repertoireName);
+				launchSpoon(repertoireName, binaryOperatorProcessor);
 			}
-			System.out.println("nbr fail final: "+testLauncher.runTests(whiteTestCurrent));
-
+			int nbrfailFinal = testLauncher.runTests(whiteTestCurrent);
+			addResultToFile(folder,nbrFailInit,nbrfailFinal);
 			if(i >= LIMITE_NBR_PROJECT_FOR_DEV)
 				break;
 			i++;
