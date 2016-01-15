@@ -28,8 +28,7 @@ public class Main {
 	
 	private static void launchSpoon(String projectPath, AbstractProcessor<?> p) throws Exception{
 		
-		String[] spoonArgs = { "-i", projectPath, "--compile", "-o", "spooned-classes", "--level", "ERROR"
-		};
+		String[] spoonArgs = { "-i", projectPath, "--compile"};
 		
 			Launcher l = new Launcher();
 			if(p!=null){
@@ -119,6 +118,7 @@ public class Main {
 			System.out.println("projet sous analyse: "+folder);
 			System.out.println("Création du projet dans spooned");
 			String whiteTestCurrent = getWhiteTestClassNameFromProject(folder);
+			deleteClassFiles(SPOON_CLASS_REPERTOIRE);
 			launchSpoon(folder,null);
 			
 			int nbrFailInit = testLauncher.runTests(whiteTestCurrent);
@@ -139,8 +139,8 @@ public class Main {
 						BinaryOperatorProcessor.better = true;
 					}
 				}
-				System.out.println(">>>>>>OK");
 				//on lance spoon une derniere fois pour que les meilleurs mutations trouvees soient restorees
+				deleteClassFiles(SPOON_CLASS_REPERTOIRE);
 				launchSpoon(SPOON_REPERTOIRE, binaryOperatorProcessor);
 			}
 			System.out.println("nbr fail final: "+testLauncher.runTests(whiteTestCurrent));
