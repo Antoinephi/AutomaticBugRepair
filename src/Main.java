@@ -157,9 +157,7 @@ public class Main {
 		listProcessors.add(new IntMutatorProcessor());
 		addDateToFile();
 		
-		List<String> sourceFolders = new ArrayList<String>();//findSourceFolder(INPUT_DATASET);
-		sourceFolders.add("C:\\Users\\kevin\\Desktop\\wk-spoon\\IntroClassJava\\dataset\\checksum\\2c1556672751734adf9a561fbf88767c32224fca14a81e9d9c719f18d0b21765038acc16ecd8377f74d4f43e8c844538161d869605e3516cf797d0a6a59f1f8e\\003\\src");
-		sourceFolders.add("C:\\Users\\kevin\\Desktop\\wk-spoon\\IntroClassJava\\dataset\\checksum\\2c1556672751734adf9a561fbf88767c32224fca14a81e9d9c719f18d0b21765038acc16ecd8377f74d4f43e8c844538161d869605e3516cf797d0a6a59f1f8e\\005\\src");
+		List<String> sourceFolders = findSourceFolder(INPUT_DATASET);
 
 		int i = 1;
 
