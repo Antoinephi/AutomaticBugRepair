@@ -167,8 +167,8 @@ public class Main {
 		listProcessors.add(new IntMutatorProcessor());
 		addDateToFile();
 		
-		List<String> sourceFolders = /*findSourceFolder(INPUT_DATASET_DIGITS);*/ new ArrayList<>(); 
-		sourceFolders.add("C:\\Users\\kevin\\Desktop\\wk-spoon\\AutomaticBugRepair\\..\\IntroClassJava\\dataset\\digits\\08c7ea4ac39aa6a5ab206393bb4412de9d2c365ecdda9c1b391be963c1811014ed23d2722d7433b8e8a95305eee314d39da4950f31e01f9147f90af91a5c433a\\000\\src");
+		List<String> sourceFolders = findSourceFolder(INPUT_DATASET_DIGITS);// new ArrayList<>(); 
+		//sourceFolders.add("C:\\Users\\kevin\\Desktop\\wk-spoon\\AutomaticBugRepair\\..\\IntroClassJava\\dataset\\digits\\08c7ea4ac39aa6a5ab206393bb4412de9d2c365ecdda9c1b391be963c1811014ed23d2722d7433b8e8a95305eee314d39da4950f31e01f9147f90af91a5c433a\\000\\src");
 		int i = 1;
 
 		for(String folder : sourceFolders){
