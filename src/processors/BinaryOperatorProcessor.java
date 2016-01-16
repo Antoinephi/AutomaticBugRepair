@@ -29,6 +29,7 @@ public class BinaryOperatorProcessor extends AbstractProcessor<CtBinaryOperator<
 	public static boolean better;
 	
 	public static Integer lastMuted = null;
+	public static BinaryOperatorKind lastKindMuted = null;
 	/*Flag qui permet de savoir si toutes les mutations possibles ont ete realisees*/
 	public static boolean terminated = false;
 	static {
@@ -71,9 +72,10 @@ public class BinaryOperatorProcessor extends AbstractProcessor<CtBinaryOperator<
 			return;
 		}
 		if(better){
-			bestBinaryOperator.put(lastMuted, binaryOperatorLine.getKind());
+			bestBinaryOperator.put(lastMuted, lastKindMuted);
 			better = false;
 			lastMuted = null;
+			lastKindMuted = null;
 		}
 		
 		if(checkAllMuted()){
@@ -123,6 +125,7 @@ public class BinaryOperatorProcessor extends AbstractProcessor<CtBinaryOperator<
 		}
 		if(!alreadyMuted){
 			binaryOperatorLine.setKind(binaryOperatorContainer.get(nbrTentativeRestante));
+			lastKindMuted = binaryOperatorContainer.get(nbrTentativeRestante);
 			nbrTentativeRestante--;
 			nbrTentativeRestanteParCtBinaryOperator.put(generateIdentifier(binaryOperatorLine),nbrTentativeRestante);
 			alreadyMuted = true;
@@ -162,6 +165,7 @@ public class BinaryOperatorProcessor extends AbstractProcessor<CtBinaryOperator<
 		BinaryOperatorProcessor.nbrTentativeRestanteParCtBinaryOperator = new HashMap<>();	
 		BinaryOperatorProcessor.alreadyMuted = false;
 		BinaryOperatorProcessor.lastMuted = null;
+		BinaryOperatorProcessor.lastKindMuted = null;
 	}
 
 }
