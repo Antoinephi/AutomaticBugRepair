@@ -17,6 +17,14 @@ import spoon.processing.AbstractProcessor;
 public class Main {
 
 	private static final String INPUT_DATASET = ".." + File.separator + "IntroClassJava" + File.separator + "dataset";
+	private static final String INPUT_DATASET_CHECKSUM = INPUT_DATASET+File.separator+"checksum";
+	private static final String INPUT_DATASET_DIGITS = INPUT_DATASET+File.separator+"digits";
+	private static final String INPUT_DATASET_GRADE = INPUT_DATASET+File.separator+"grade";
+	private static final String INPUT_DATASET_MEDIAN = INPUT_DATASET+File.separator+"median";
+	private static final String INPUT_DATASET_SMALLEST = INPUT_DATASET+File.separator+"smallest";
+	private static final String INPUT_DATASET_SYLLABLES= INPUT_DATASET+File.separator+"syllables";
+
+
 	private static final String WHITEBOX_TEST = "WhiteboxTest";
 //	private static final String BLACKBOX_TEST = "BlackboxTest";
 	private static final String SPOON_REPERTOIRE= "spooned";
@@ -93,11 +101,13 @@ public class Main {
 	
 	private static void deleteClassFiles(String path){
 		File[] files = new File(path).listFiles();
-		for(File f : files){
-			if(!f.isDirectory() && f.getName().contains(".class"))
-				f.delete();
-			else if(f.isDirectory())
-				deleteClassFiles(f.getAbsolutePath());
+		if(files != null){
+			for(File f : files){
+				if(!f.isDirectory() && f.getName().contains(".class"))
+					f.delete();
+				else if(f.isDirectory())
+					deleteClassFiles(f.getAbsolutePath());
+			}
 		}
 		
 	}
@@ -151,14 +161,14 @@ public class Main {
 	public static void main(String[] args) throws Exception {
 		
 		long start = System.currentTimeMillis();
-		final Integer LIMITE_NBR_PROJECT_FOR_DEV = 3;
+		final Integer LIMITE_NBR_PROJECT_FOR_DEV = 1800;
 		TestLauncher testLauncher = new TestLauncher();
 		listProcessors.add(new BinaryOperatorProcessor());
 		listProcessors.add(new IntMutatorProcessor());
 		addDateToFile();
 		
-		List<String> sourceFolders = findSourceFolder(INPUT_DATASET);
-
+		List<String> sourceFolders = /*findSourceFolder(INPUT_DATASET_DIGITS);*/ new ArrayList<>(); 
+		sourceFolders.add("C:\\Users\\kevin\\Desktop\\wk-spoon\\AutomaticBugRepair\\..\\IntroClassJava\\dataset\\digits\\08c7ea4ac39aa6a5ab206393bb4412de9d2c365ecdda9c1b391be963c1811014ed23d2722d7433b8e8a95305eee314d39da4950f31e01f9147f90af91a5c433a\\000\\src");
 		int i = 1;
 
 		for(String folder : sourceFolders){
@@ -181,6 +191,7 @@ public class Main {
 
 					int nbrFailAfterSpoon = testLauncher.runTests(whiteTestCurrent);
 					if(nbrFailAfterSpoon < lowestFail){
+						System.out.println("correction detectee !" +nbrFailAfterSpoon+ " < "+lowestFail);
 						lowestFail = nbrFailAfterSpoon;
 						BinaryOperatorProcessor.better = true;
 					}

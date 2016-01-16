@@ -93,7 +93,6 @@ public class BinaryOperatorProcessor extends AbstractProcessor<CtBinaryOperator<
 	 * 
 	 * Si il n y a plus de tentative possible on set l operateur qui a obtenu le meilleur resultat*/
 	private void nextMutation(CtBinaryOperator<?> binaryOperatorLine, List<BinaryOperatorKind> binaryOperatorContainer) {
-		
 		Integer nbrTentativeRestante = nbrTentativeRestanteParCtBinaryOperator.get(generateIdentifier(binaryOperatorLine));
 		if(nbrTentativeRestante == null){
 			nbrTentativeRestante = binaryOperatorContainer.size()-1;
@@ -113,7 +112,11 @@ public class BinaryOperatorProcessor extends AbstractProcessor<CtBinaryOperator<
 	
 	/* genere un identifiant unique pour stocker les valeurs dans les maps*/
 	private int generateIdentifier(CtBinaryOperator<?> operator){
-		return (operator.getRightHandOperand()+operator.getLeftHandOperand().toString()).hashCode();
+		int longueurMembreGauche = operator.getLeftHandOperand().toString().length();
+		int longueurMembreDroite = operator.getRightHandOperand().toString().length();
+		int longueur = operator.getLeftHandOperand().toString().charAt(longueurMembreGauche-1)+operator.getRightHandOperand().toString().charAt(longueurMembreDroite-1);
+		//System.out.println(operator + " "+ longueur);
+		return operator.getPosition().hashCode()+longueur;
 	}
 	
 	
