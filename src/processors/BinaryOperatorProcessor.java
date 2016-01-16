@@ -9,6 +9,8 @@ import spoon.processing.AbstractProcessor;
 import spoon.reflect.code.BinaryOperatorKind;
 import spoon.reflect.code.CtBinaryOperator;
 import spoon.reflect.declaration.CtClass;
+import spoon.reflect.visitor.Query;
+import spoon.reflect.visitor.filter.TypeFilter;
 
 public class BinaryOperatorProcessor extends AbstractProcessor<CtBinaryOperator<?>> {
 	
@@ -62,22 +64,35 @@ public class BinaryOperatorProcessor extends AbstractProcessor<CtBinaryOperator<
 
 	@Override
 	public void process(CtBinaryOperator<?> binaryOperatorLine) {
-		
+		CtClass<?> parent = binaryOperatorLine.getParent(CtClass.class);
+		String parentSimpleName = parent.getSimpleName();
+
+		if(terminated){
+			return;
+		}
 		if(better){
 			bestBinaryOperator.put(lastMuted, binaryOperatorLine.getKind());
 			better = false;
 			lastMuted = null;
 		}
 		
-		Integer nbrTentative = nbrTentativeRestanteParCtBinaryOperator.get(generateIdentifier(binaryOperatorLine));
-		if(nbrTentative != null && nbrTentative == -2){
+		if(checkAllMuted()){
+			
+			List<CtBinaryOperator<?>> listeBinaryOperator = Query.getElements(parent, new TypeFilter<>(CtBinaryOperator.class));
+			if(listeBinaryOperator != null){
+				for(CtBinaryOperator<?> binaryOperator : listeBinaryOperator){
+					binaryOperator.setKind(bestBinaryOperator.get(generateIdentifier(binaryOperator)));
+				}
+			}
 			return;
 		}
-		String parentSimpleName = binaryOperatorLine.getParent(CtClass.class).getSimpleName();
+		
+		Integer nbrTentative = nbrTentativeRestanteParCtBinaryOperator.get(generateIdentifier(binaryOperatorLine));
+		if(nbrTentative != null && nbrTentative == -1){
+			return;
+		}
 		if(!(parentSimpleName.contains("Test")) && !(parentSimpleName.contains("Obj"))){
 			
-			/*Si la derniere execution a corrige plus de test on sauvegarde la mutation effectuee*/
-
 			if(binaryOperatorBoolean.contains(binaryOperatorLine.getKind())){
 				nextMutation(binaryOperatorLine, binaryOperatorBoolean);
 			}else if(binaryOperatorNumber.contains(binaryOperatorLine.getKind())){
@@ -98,18 +113,13 @@ public class BinaryOperatorProcessor extends AbstractProcessor<CtBinaryOperator<
 
 	/* Permet d effectuer la mutation suivante en se basant sur le nombre de tentative restante
 	 * 
-	 * Si il n y a plus de tentative possible on set l operateur qui a obtenu le meilleur resultat*/
+	 * */
 	private void nextMutation(CtBinaryOperator<?> binaryOperatorLine, List<BinaryOperatorKind> binaryOperatorContainer) {
 		Integer nbrTentativeRestante = nbrTentativeRestanteParCtBinaryOperator.get(generateIdentifier(binaryOperatorLine));
 		if(nbrTentativeRestante == null){
 			nbrTentativeRestante = binaryOperatorContainer.size()-1;
 			nbrTentativeRestanteParCtBinaryOperator.put(generateIdentifier(binaryOperatorLine), nbrTentativeRestante);
 			bestBinaryOperator.put(generateIdentifier(binaryOperatorLine), binaryOperatorLine.getKind());
-		}else if(nbrTentativeRestante == -1){
-			binaryOperatorLine.setKind(bestBinaryOperator.get(generateIdentifier(binaryOperatorLine)));
-			nbrTentativeRestante--;
-			nbrTentativeRestanteParCtBinaryOperator.put(generateIdentifier(binaryOperatorLine),nbrTentativeRestante);
-			return;
 		}
 		if(!alreadyMuted){
 			binaryOperatorLine.setKind(binaryOperatorContainer.get(nbrTentativeRestante));
@@ -125,21 +135,22 @@ public class BinaryOperatorProcessor extends AbstractProcessor<CtBinaryOperator<
 		int longueurMembreGauche = operator.getLeftHandOperand().toString().length();
 		int longueurMembreDroite = operator.getRightHandOperand().toString().length();
 		int longueur = operator.getLeftHandOperand().toString().charAt(longueurMembreGauche-1)+operator.getRightHandOperand().toString().charAt(longueurMembreDroite-1);
-		//System.out.println(operator + " "+ longueur);
+
 		return operator.getPosition().hashCode()+longueur;
 	}
-	
-	
-	public void processingDone(){
-		
-		for(Integer tentativeRestante : nbrTentativeRestanteParCtBinaryOperator.values()){
-			if(tentativeRestante > -2){
-				return;
+
+	private boolean checkAllMuted() {
+		if(nbrTentativeRestanteParCtBinaryOperator.size() > 1){
+			for(Integer tentativeRestante : nbrTentativeRestanteParCtBinaryOperator.values()){
+				if(tentativeRestante > -1){
+					return false;
+				}
 			}
+			terminated = true;
+			return true;
 		}
 		
-		terminated = true;
-		
+		return false;
 	}
 
 

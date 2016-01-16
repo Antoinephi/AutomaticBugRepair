@@ -173,8 +173,7 @@ public class Main {
 		listProcessors.add(new IntMutatorProcessor());
 		addDateToFile();
 		
-		List<String> sourceFolders = findSourceFolder(INPUT_DATASET_CHECKSUM); //new ArrayList<>(); 
-		//sourceFolders.add("C:\\Users\\kevin\\Desktop\\wk-spoon\\AutomaticBugRepair\\..\\IntroClassJava\\dataset\\checksum\\e9c74e27a17310a52842f7099c3e5c126298e1a08f2b841169cd5f155e6f2970d14d0314da1f6314ed970de1d20be306a60f0ce341d1c4d01300cc6efad7ab9b\\000\\src");
+		List<String> sourceFolders = findSourceFolder(INPUT_DATASET_DIGITS);
 		int i = 1;
 
 		for(String folder : sourceFolders){
@@ -195,7 +194,8 @@ public class Main {
 				while(BinaryOperatorProcessor.terminated != true){
 					BinaryOperatorProcessor.alreadyMuted = false;
 					deleteClassFiles(repertoireClasseName);
-					launchSpoon(repertoireName, binaryOperatorProcessor);
+					//launchSpoon(repertoireName, binaryOperatorProcessor);
+					launchSpoon(folder, binaryOperatorProcessor);
 
 					int nbrFailAfterSpoon = testLauncher.runTests(whiteTestCurrent,repertoireClasseName);
 					if(nbrFailAfterSpoon < lowestFail){
@@ -206,7 +206,9 @@ public class Main {
 				}
 				//on lance spoon une derniere fois pour que les meilleurs mutations trouvees soient restorees
 				deleteClassFiles(repertoireClasseName);
-				launchSpoon(repertoireName, binaryOperatorProcessor);
+				//launchSpoon(repertoireName, binaryOperatorProcessor);
+				launchSpoon(folder, binaryOperatorProcessor);
+
 			}
 			int nbrfailFinal = testLauncher.runTests(whiteTestCurrent,repertoireClasseName);
 			addResultToFile(folder,nbrFailInit,nbrfailFinal);
