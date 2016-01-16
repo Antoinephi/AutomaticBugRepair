@@ -8,19 +8,17 @@ import org.junit.runner.Result;
 
 public class TestLauncher {
 	
-	private static final String SPOON_CLASS_REPERTOIRE="spooned-classes";
-
 	
-	public ClassLoader getClassLoader() throws MalformedURLException {
+	public ClassLoader getClassLoader(String repertoire) throws MalformedURLException {
 		final URL[] urls = {
-				new File(SPOON_CLASS_REPERTOIRE).toURI().toURL()};
-		return URLClassLoader.newInstance(urls, getClass().getClassLoader());
+				new File(repertoire).toURI().toURL()};
+		return URLClassLoader.newInstance(urls/*, getClass().getClassLoader()*/);
 	}
 	
-	public int runTests(String classeName){
+	public int runTests(String classeName, String repertoireClasse){
 		
 		try{
-			ClassLoader classLoader = getClassLoader();
+			ClassLoader classLoader = getClassLoader(repertoireClasse);
 			JUnitCore junit = new JUnitCore();
 			Result results = junit.run(classLoader.loadClass(classeName));
 

@@ -42,11 +42,17 @@ public class Main {
 	private static void launchSpoon(String projectPath, AbstractProcessor<?> p) throws Exception{
 		
 		String repertoireCible = projectPath;
+		String repertoireDestinationClasse = "";
 		String pattern = Pattern.quote(File.separator);
-		if(projectPath.split(pattern).length > 2){
+		String [] repertoireSplit = projectPath.split(pattern);
+		if(repertoireSplit.length > 2){
 			repertoireCible = SPOON_REPERTOIRE+File.separator+generateRepertoireName(projectPath);
+			repertoireDestinationClasse = SPOON_CLASS_REPERTOIRE+File.separator+generateRepertoireName(projectPath);
+		}else{
+			repertoireDestinationClasse = SPOON_CLASS_REPERTOIRE+File.separator+repertoireSplit[repertoireSplit.length-1];
+			
 		}
-		String[] spoonArgs = { "-i", projectPath, "--compile", "-o", repertoireCible};
+		String[] spoonArgs = { "-i", projectPath, "--compile", "-o", repertoireCible, "-d" ,repertoireDestinationClasse };
 		
 			Launcher l = new Launcher();
 			if(p!=null){
@@ -167,29 +173,31 @@ public class Main {
 		listProcessors.add(new IntMutatorProcessor());
 		addDateToFile();
 		
-		List<String> sourceFolders = findSourceFolder(INPUT_DATASET_DIGITS);// new ArrayList<>(); 
-		//sourceFolders.add("C:\\Users\\kevin\\Desktop\\wk-spoon\\AutomaticBugRepair\\..\\IntroClassJava\\dataset\\digits\\08c7ea4ac39aa6a5ab206393bb4412de9d2c365ecdda9c1b391be963c1811014ed23d2722d7433b8e8a95305eee314d39da4950f31e01f9147f90af91a5c433a\\000\\src");
+		List<String> sourceFolders = findSourceFolder(INPUT_DATASET_CHECKSUM); //new ArrayList<>(); 
+		//sourceFolders.add("C:\\Users\\kevin\\Desktop\\wk-spoon\\AutomaticBugRepair\\..\\IntroClassJava\\dataset\\checksum\\e9c74e27a17310a52842f7099c3e5c126298e1a08f2b841169cd5f155e6f2970d14d0314da1f6314ed970de1d20be306a60f0ce341d1c4d01300cc6efad7ab9b\\000\\src");
 		int i = 1;
 
 		for(String folder : sourceFolders){
-			String repertoireName = SPOON_REPERTOIRE+File.separator+generateRepertoireName(folder);
-			String whiteTestCurrent = getWhiteTestClassNameFromProject(folder);
-			deleteClassFiles(SPOON_CLASS_REPERTOIRE);
-			launchSpoon(folder,null);
+			//on reinitialise les attributs static du processeur pour eviter d'interferer entre les projets
+			BinaryOperatorProcessor.raz();
 			
-			int nbrFailInit = testLauncher.runTests(whiteTestCurrent);
+			String repertoireName = SPOON_REPERTOIRE+File.separator+generateRepertoireName(folder);
+			String repertoireClasseName = SPOON_CLASS_REPERTOIRE+File.separator+generateRepertoireName(folder);
+			String whiteTestCurrent = getWhiteTestClassNameFromProject(folder);
+			deleteClassFiles(repertoireClasseName);
+			launchSpoon(folder,null);
+			int nbrFailInit = testLauncher.runTests(whiteTestCurrent,repertoireClasseName);
+			System.out.println("Projet sous test "+folder+" nbr fail init "+nbrFailInit);
 			int lowestFail = nbrFailInit;
 
-			//on reinitialise les attributs static du processeur pour eviter d'interferer entre les projets
-			BinaryOperatorProcessor.raz((getMainClassNameFromProjectWithoutPackage(folder)));
 			if(lowestFail > 0){
 				//tant qu il reste des possiblites de mutation on boucle sur les projets generes par spoon
 				while(BinaryOperatorProcessor.terminated != true){
 					BinaryOperatorProcessor.alreadyMuted = false;
-					deleteClassFiles(repertoireName);
+					deleteClassFiles(repertoireClasseName);
 					launchSpoon(repertoireName, binaryOperatorProcessor);
 
-					int nbrFailAfterSpoon = testLauncher.runTests(whiteTestCurrent);
+					int nbrFailAfterSpoon = testLauncher.runTests(whiteTestCurrent,repertoireClasseName);
 					if(nbrFailAfterSpoon < lowestFail){
 						System.out.println("correction detectee !" +nbrFailAfterSpoon+ " < "+lowestFail);
 						lowestFail = nbrFailAfterSpoon;
@@ -197,10 +205,10 @@ public class Main {
 					}
 				}
 				//on lance spoon une derniere fois pour que les meilleurs mutations trouvees soient restorees
-				deleteClassFiles(repertoireName);
+				deleteClassFiles(repertoireClasseName);
 				launchSpoon(repertoireName, binaryOperatorProcessor);
 			}
-			int nbrfailFinal = testLauncher.runTests(whiteTestCurrent);
+			int nbrfailFinal = testLauncher.runTests(whiteTestCurrent,repertoireClasseName);
 			addResultToFile(folder,nbrFailInit,nbrfailFinal);
 			if(i >= LIMITE_NBR_PROJECT_FOR_DEV)
 				break;

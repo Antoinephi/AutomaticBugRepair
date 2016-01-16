@@ -12,15 +12,13 @@ import spoon.reflect.declaration.CtClass;
 
 public class BinaryOperatorProcessor extends AbstractProcessor<CtBinaryOperator<?>> {
 	
-	/*Permet de ne muter que la classe du projet courant*/
-	public static String currentClass;
 	public static List<BinaryOperatorKind> binaryOperatorNumber = new ArrayList<>();
 	public static List<BinaryOperatorKind> binaryOperatorBoolean = new ArrayList<>();
 	public static List<BinaryOperatorKind> binaryOperatorShift = new ArrayList<>();
 	public static List<BinaryOperatorKind> binaryOperatorLogic = new ArrayList<>();
 	public static boolean alreadyMuted = false;
 	/* Map qui permet de retrouver le nombre de tentative restante par CtBinaryOperator*/
-	public static Map<Integer, Integer> nbrTentativeRestanteParCtBinaryOperator;
+	public static Map<Integer, Integer> nbrTentativeRestanteParCtBinaryOperator = new HashMap<>();
 	
 	/* Map qui permet de conserver l operateur binaire initial ou celui qui a eu le meilleur score aux tests*/
 	public static Map<Integer, BinaryOperatorKind> bestBinaryOperator;
@@ -28,6 +26,7 @@ public class BinaryOperatorProcessor extends AbstractProcessor<CtBinaryOperator<
 	/*Flag qui permet de savoir si le lancement des tests apres la mutation a genere de meilleurs resultats*/
 	public static boolean better;
 	
+	public static Integer lastMuted = null;
 	/*Flag qui permet de savoir si toutes les mutations possibles ont ete realisees*/
 	public static boolean terminated = false;
 	static {
@@ -63,14 +62,22 @@ public class BinaryOperatorProcessor extends AbstractProcessor<CtBinaryOperator<
 
 	@Override
 	public void process(CtBinaryOperator<?> binaryOperatorLine) {
+		
+		if(better){
+			bestBinaryOperator.put(lastMuted, binaryOperatorLine.getKind());
+			better = false;
+			lastMuted = null;
+		}
+		
+		Integer nbrTentative = nbrTentativeRestanteParCtBinaryOperator.get(generateIdentifier(binaryOperatorLine));
+		if(nbrTentative != null && nbrTentative == -2){
+			return;
+		}
 		String parentSimpleName = binaryOperatorLine.getParent(CtClass.class).getSimpleName();
-		if(!(parentSimpleName.contains("Test")) && !(parentSimpleName.contains("Obj")) && parentSimpleName.contains(currentClass)){
+		if(!(parentSimpleName.contains("Test")) && !(parentSimpleName.contains("Obj"))){
 			
 			/*Si la derniere execution a corrige plus de test on sauvegarde la mutation effectuee*/
-			if(better){
-				bestBinaryOperator.put(generateIdentifier(binaryOperatorLine), binaryOperatorLine.getKind());
-				better = false;
-			}
+
 			if(binaryOperatorBoolean.contains(binaryOperatorLine.getKind())){
 				nextMutation(binaryOperatorLine, binaryOperatorBoolean);
 			}else if(binaryOperatorNumber.contains(binaryOperatorLine.getKind())){
@@ -100,6 +107,8 @@ public class BinaryOperatorProcessor extends AbstractProcessor<CtBinaryOperator<
 			bestBinaryOperator.put(generateIdentifier(binaryOperatorLine), binaryOperatorLine.getKind());
 		}else if(nbrTentativeRestante == -1){
 			binaryOperatorLine.setKind(bestBinaryOperator.get(generateIdentifier(binaryOperatorLine)));
+			nbrTentativeRestante--;
+			nbrTentativeRestanteParCtBinaryOperator.put(generateIdentifier(binaryOperatorLine),nbrTentativeRestante);
 			return;
 		}
 		if(!alreadyMuted){
@@ -107,6 +116,7 @@ public class BinaryOperatorProcessor extends AbstractProcessor<CtBinaryOperator<
 			nbrTentativeRestante--;
 			nbrTentativeRestanteParCtBinaryOperator.put(generateIdentifier(binaryOperatorLine),nbrTentativeRestante);
 			alreadyMuted = true;
+			lastMuted = generateIdentifier(binaryOperatorLine);
 		}
 	}
 	
@@ -123,7 +133,7 @@ public class BinaryOperatorProcessor extends AbstractProcessor<CtBinaryOperator<
 	public void processingDone(){
 		
 		for(Integer tentativeRestante : nbrTentativeRestanteParCtBinaryOperator.values()){
-			if(tentativeRestante > -1){
+			if(tentativeRestante > -2){
 				return;
 			}
 		}
@@ -134,13 +144,13 @@ public class BinaryOperatorProcessor extends AbstractProcessor<CtBinaryOperator<
 
 
 
-	public static void raz(String classe) {
+	public static void raz() {
 		BinaryOperatorProcessor.better = false;
 		BinaryOperatorProcessor.terminated = false;
 		BinaryOperatorProcessor.bestBinaryOperator = new HashMap<>();
 		BinaryOperatorProcessor.nbrTentativeRestanteParCtBinaryOperator = new HashMap<>();	
-		BinaryOperatorProcessor.currentClass = classe;
-
+		BinaryOperatorProcessor.alreadyMuted = false;
+		BinaryOperatorProcessor.lastMuted = null;
 	}
 
 }
