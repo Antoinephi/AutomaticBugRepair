@@ -1,17 +1,17 @@
 package processors;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import parameters.IntValues;
 import spoon.processing.AbstractProcessor;
-import spoon.reflect.code.BinaryOperatorKind;
 import spoon.reflect.code.CtLiteral;
 import spoon.reflect.declaration.CtClass;
+import spoon.reflect.visitor.Query;
+import spoon.reflect.visitor.filter.TypeFilter;
 
-public class IntMutatorProcessor extends AbstractProcessor<CtLiteral<?>> {
+public class IntMutatorProcessor extends AbstractProcessor<CtClass<?>> {
 	private static int intMutationPosition; //position de la variable à muter dnas la classe
 	private static int intValuePosition; // position de la valeur dans la liste des mutations possibles 
 
@@ -28,6 +28,8 @@ public class IntMutatorProcessor extends AbstractProcessor<CtLiteral<?>> {
 	
 	private static List<Integer> listOperators = new ArrayList<Integer>();
 	
+	private static List<CtLiteral<Integer>> literals = new ArrayList<CtLiteral<Integer>>();
+	
 	static {
 		listOperators.add(-1);
 		listOperators.add(1);
@@ -37,11 +39,26 @@ public class IntMutatorProcessor extends AbstractProcessor<CtLiteral<?>> {
 //		System.out.println(this.getEnvironment().toString());
 	}
 	
-	public void process(CtLiteral<?> literal) {
-		String parentSimpleName = literal.getParent(CtClass.class).getSimpleName();
-		if(!parentSimpleName.contains("Test") && !parentSimpleName.contains("Obj") && literal.getType().getSimpleName().equals("int")){
+	public void process(CtClass<?> c) {
+		if(!c.getSimpleName().contains("Test") && !c.getSimpleName().contains("Obj")){
+			if(!IntMutatorProcessor.currentClass.equals(this.getClass().getSimpleName())){
+				literals = Query.getElements(c, new TypeFilter<CtLiteral<Integer>>(CtLiteral.class));
+				IntMutatorProcessor.currentClass = this.getClass().getSimpleName();
+			}
 			
 		}
+	}
+	
+	public void mutate(){
+		CtLiteral<Integer> value = literals.get(intMutationPosition);
+		value.setValue(value.getValue() + listOperators.get(intValuePosition));
+		if(intValuePosition >= listOperators.size()-1){
+			intMutationPosition++;
+			intValuePosition = 0;
+		} else {
+			intValuePosition++;
+		}
+		
 	}
 	
 /*	public void returnMutation(){
@@ -103,6 +120,8 @@ public class IntMutatorProcessor extends AbstractProcessor<CtLiteral<?>> {
 	public static void raz(String classe) {
 		IntMutatorProcessor.better = false;
 		IntMutatorProcessor.terminated = false;
+		IntMutatorProcessor.intMutationPosition = 0;
+		IntMutatorProcessor.intValuePosition = 0;
 //		BinaryOperatorProcessor.bestBinaryOperator = new HashMap<>();
 //		BinaryOperatorProcessor.nbrTentativeRestanteParCtBinaryOperator = new HashMap<>();	
 		IntMutatorProcessor.currentClass = classe;

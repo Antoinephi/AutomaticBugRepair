@@ -25,7 +25,8 @@ public class Main {
 	private static final String PACKAGE ="introclassJava.";
 	private static final String FILE_RESULT_NAME ="result.txt";
 	private static BinaryOperatorProcessor binaryOperatorProcessor = new BinaryOperatorProcessor();
-	
+	private static IntMutatorProcessor intMutatorProcessor = new IntMutatorProcessor();
+			
 	public static List<String> listSourceFiles;
 	public static List<String> listTestFiles;
 	
@@ -166,28 +167,28 @@ public class Main {
 			String whiteTestCurrent = getWhiteTestClassNameFromProject(folder);
 			deleteClassFiles(SPOON_CLASS_REPERTOIRE);
 			launchSpoon(folder,null);
-			
+			System.out.println(">>>> Folder" + folder);
 			int nbrFailInit = testLauncher.runTests(whiteTestCurrent);
 			int lowestFail = nbrFailInit;
 
 			//on reinitialise les attributs static du processeur pour eviter d'interferer entre les projets
-			BinaryOperatorProcessor.raz((getMainClassNameFromProjectWithoutPackage(folder)));
+			IntMutatorProcessor.raz((getMainClassNameFromProjectWithoutPackage(folder)));
 			if(lowestFail > 0){
 				//tant qu il reste des possiblites de mutation on boucle sur les projets generes par spoon
 				while(BinaryOperatorProcessor.terminated != true){
 					BinaryOperatorProcessor.alreadyMuted = false;
 					deleteClassFiles(repertoireName);
-					launchSpoon(repertoireName, binaryOperatorProcessor);
+					launchSpoon(repertoireName, intMutatorProcessor);
 
 					int nbrFailAfterSpoon = testLauncher.runTests(whiteTestCurrent);
 					if(nbrFailAfterSpoon < lowestFail){
 						lowestFail = nbrFailAfterSpoon;
-						BinaryOperatorProcessor.better = true;
+						IntMutatorProcessor.better = true;
 					}
 				}
 				//on lance spoon une derniere fois pour que les meilleurs mutations trouvees soient restorees
 				deleteClassFiles(repertoireName);
-				launchSpoon(repertoireName, binaryOperatorProcessor);
+				launchSpoon(repertoireName, intMutatorProcessor);
 			}
 			int nbrfailFinal = testLauncher.runTests(whiteTestCurrent);
 			addResultToFile(folder,nbrFailInit,nbrfailFinal);
