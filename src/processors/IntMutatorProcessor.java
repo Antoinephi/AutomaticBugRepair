@@ -70,11 +70,11 @@ public class IntMutatorProcessor extends AbstractProcessor<CtClass<?>> {
 //				literals = Query.getElements(c, new TypeFilter<CtLiteral<Integer>>(CtLiteral.class));
 				literals = Query.getElements(c, new NumericLiteralFilter());
 				variables = Query.getElements(c, new TypeFilter<CtFieldRead<?>>(CtFieldRead.class));
-				System.out.println(literals);
-				System.out.println(variables);
+//				System.out.println(literals);
+//				System.out.println(variables);
 //				Factory f = getFactory();
-				for(CtFieldRead<?> l : variables){
-					if(l.getType().getSimpleName().equals("int") && !l.toString().contains("args")){
+//				for(CtFieldRead<?> l : variables){
+//					if(l.getType().getSimpleName().equals("int") && !l.toString().contains("args")){
 //						l.setAssignment(new CtLiteralImpl().setValue(l.getAssignment() + "+" + 1));
 //						l.getParent().setFactory(getFactory().Field().createReference((CtField<?>) l.getAssigned()));
 //						c.addField((CtField<?>) l.getAssigned());
@@ -92,7 +92,7 @@ public class IntMutatorProcessor extends AbstractProcessor<CtClass<?>> {
 //						l.setAssignment((CtExpression<?>) cl);
 //						CtFieldRead<?> field = new CtFieldReadImpl<Number>();
 //						field.set
-						CtMethod m = l.getParent(CtMethod.class);
+//						CtMethod m = l.getParent(CtMethod.class);
 //						e = b.getParent();
 //						CtCodeSnippetStatement f = getFactory().Core().createCodeSnippetStatement();
 //						f.setValue(l.toString() + " + 1");
@@ -101,11 +101,11 @@ public class IntMutatorProcessor extends AbstractProcessor<CtClass<?>> {
 //						System.out.println(f);
 //						CtExpression<?> e = l.getAssignment();
 						
-					}
+//					}
 						
 //					System.out.println(l.getAss);
-				}
-				System.exit(0);
+//				}
+//				System.exit(0);
 				IntMutatorProcessor.currentClass = this.getClass().getSimpleName();
 			}
 			mutate();
