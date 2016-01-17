@@ -9,15 +9,14 @@ import parameters.IntValues;
 import parameters.NumericLiteralFilter;
 //import parameters.NumericLiteralFilter;
 import spoon.processing.AbstractProcessor;
-import spoon.reflect.code.CtBinaryOperator;
+import spoon.reflect.code.CtBlock;
+import spoon.reflect.code.CtCodeSnippetStatement;
 import spoon.reflect.code.CtFieldRead;
 import spoon.reflect.code.CtLiteral;
-import spoon.reflect.code.CtVariableRead;
 import spoon.reflect.declaration.CtClass;
-import spoon.reflect.declaration.CtElement;
+import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.visitor.Query;
 import spoon.reflect.visitor.filter.TypeFilter;
-import spoon.support.reflect.code.CtBinaryOperatorImpl;
 
 public class IntMutatorProcessor extends AbstractProcessor<CtClass<?>> {
 	private static int intMutationPosition; //position de la variable à muter dnas la classe
@@ -70,12 +69,12 @@ public class IntMutatorProcessor extends AbstractProcessor<CtClass<?>> {
 				prevValue = null;
 //				literals = Query.getElements(c, new TypeFilter<CtLiteral<Integer>>(CtLiteral.class));
 				literals = Query.getElements(c, new NumericLiteralFilter());
-//				variables = Query.getElements(c, new TypeFilter<CtFieldRead<?>>(CtFieldRead.class));
-//				System.out.println(literals);
-//				System.out.println(variables);
+				variables = Query.getElements(c, new TypeFilter<CtFieldRead<?>>(CtFieldRead.class));
+				System.out.println(literals);
+				System.out.println(variables);
 //				Factory f = getFactory();
-//				for(CtVariableRead<?> l : variables){
-//					if(l.getType().getSimpleName().equals("int") && !l.toString().contains("args")){
+				for(CtFieldRead<?> l : variables){
+					if(l.getType().getSimpleName().equals("int") && !l.toString().contains("args")){
 //						l.setAssignment(new CtLiteralImpl().setValue(l.getAssignment() + "+" + 1));
 //						l.getParent().setFactory(getFactory().Field().createReference((CtField<?>) l.getAssigned()));
 //						c.addField((CtField<?>) l.getAssigned());
@@ -93,16 +92,20 @@ public class IntMutatorProcessor extends AbstractProcessor<CtClass<?>> {
 //						l.setAssignment((CtExpression<?>) cl);
 //						CtFieldRead<?> field = new CtFieldReadImpl<Number>();
 //						field.set
-//						CtElement e = l.getParent();
+						CtMethod m = l.getParent(CtMethod.class);
 //						e = b.getParent();
-//						System.out.println(e.);
+//						CtCodeSnippetStatement f = getFactory().Core().createCodeSnippetStatement();
+//						f.setValue(l.toString() + " + 1");
+//						CtBlock block = getFactory().Code().createCtBlock(f);
+//						m.;
+//						System.out.println(f);
 //						CtExpression<?> e = l.getAssignment();
 						
-//					}
+					}
 						
 //					System.out.println(l.getAss);
-//				}
-//				System.exit(0);
+				}
+				System.exit(0);
 				IntMutatorProcessor.currentClass = this.getClass().getSimpleName();
 			}
 			mutate();
@@ -158,61 +161,6 @@ public class IntMutatorProcessor extends AbstractProcessor<CtClass<?>> {
 		}
 	}
 	
-/*	public void returnMutation(){
-		//CtLiteral<Integer> toMutateVal = (CtLiteral<Integer>) returnRandomVariable(variables);
-		CtLiteral<Integer> toMutateVal = null;
-		for(int j = i; j < variables.size(); j++){
-			System.out.println(variables.get(j));
-			if(variables.get(j).getType().getSimpleName().equals("int")){
-				toMutateVal = (CtLiteral<Integer>) variables.get(j);
-				System.out.println(variables.get(j).getType().getSimpleName());
-				i = j;
-				break;
-			}
-
-
-		}
-		
-		if(toMutateVal == null){
-			throw new NullPointerException();
-		}
-		
-		/*int newVal = returnRandomValue();
-		while(toMutateVal.getValue() == newVal)
-			newVal = returnRandomValue();
-
-		switch(r.nextInt(4)){
-			case 0:
-				toMutateVal.setValue(toMutateVal.getValue() + newVal); 
-			case 1:
-				toMutateVal.setValue(toMutateVal.getValue() - newVal);
-			case 2:
-				toMutateVal.setValue(newVal); 
-
-		}
-		toMutateVal.setValue(toMutateVal.getValue() - 1);
-		
-	}*/
-	
-	public int returnValue(int index){
-		return IntValues.values()[index].getValue();
-	}
-	
-	/*public int returnRandomValue(){
-	
-		return IntValues.values()[r.nextInt(IntValues.values().length)].getValue();
-	}
-	
-	public CtLiteral<?> returnRandomVariable(List<CtLiteral<?>> variables){
-		int rd = r.nextInt(variables.size());
-		while(!variables.get(rd).getType().getSimpleName().equals("int"))
-			rd = r.nextInt(variables.size());
-		return variables.get(rd);
-	}
-	
-	public void processingDone(){
-//		System.out.println("done");
-	}*/
 	
 	public static void raz(String classe) {
 		IntMutatorProcessor.better = false;
