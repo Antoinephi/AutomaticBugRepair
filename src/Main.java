@@ -88,7 +88,7 @@ public class Main {
 		
 		return pathToSources;
 	}
-	
+
 	/*Permet de recuperer tous les fichiers java d un projet ou uniquement le fichier de nom classUnderTest il n'est pas null*/
 	private static List<String> findJavaFiles(String path, String classUnderTest){
 		File[] files = new File(path).listFiles();
@@ -173,7 +173,7 @@ public class Main {
 		listProcessors.add(new IntMutatorProcessor());
 		addDateToFile();
 		
-		List<String> sourceFolders = findSourceFolder(INPUT_DATASET_MEDIAN);
+		List<String> sourceFolders = findSourceFolder(INPUT_DATASET_SMALLEST);
 		int i = 1;
 
 		for(String folder : sourceFolders){
