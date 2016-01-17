@@ -80,10 +80,11 @@ public class BinaryOperatorProcessor extends AbstractProcessor<CtBinaryOperator<
 		}
 		
 		if(checkAllMuted()){
-			
+			System.out.println(bestBinaryOperator);
 			List<CtBinaryOperator<?>> listeBinaryOperator = Query.getElements(parent, new TypeFilter<>(CtBinaryOperator.class));
 			if(listeBinaryOperator != null){
 				for(CtBinaryOperator<?> binaryOperator : listeBinaryOperator){
+					//System.out.println(binaryOperator+" "+generateIdentifier(binaryOperator)+" "+bestBinaryOperator.get(generateIdentifier(binaryOperator)));
 					BinaryOperatorKind operateur = bestBinaryOperator.get(generateIdentifier(binaryOperator));
 					if(operateur != null){
 						binaryOperator.setKind(operateur);
@@ -121,19 +122,20 @@ public class BinaryOperatorProcessor extends AbstractProcessor<CtBinaryOperator<
 	 * 
 	 * */
 	private void nextMutation(CtBinaryOperator<?> binaryOperatorLine, List<BinaryOperatorKind> binaryOperatorContainer) {
-		Integer nbrTentativeRestante = nbrTentativeRestanteParCtBinaryOperator.get(generateIdentifier(binaryOperatorLine));
+		int identifiant = generateIdentifier(binaryOperatorLine);
+		Integer nbrTentativeRestante = nbrTentativeRestanteParCtBinaryOperator.get(identifiant);
 		if(nbrTentativeRestante == null){
 			nbrTentativeRestante = binaryOperatorContainer.size()-1;
-			nbrTentativeRestanteParCtBinaryOperator.put(generateIdentifier(binaryOperatorLine), nbrTentativeRestante);
-			bestBinaryOperator.put(generateIdentifier(binaryOperatorLine), binaryOperatorLine.getKind());
+			nbrTentativeRestanteParCtBinaryOperator.put(identifiant, nbrTentativeRestante);
+			bestBinaryOperator.put(identifiant, binaryOperatorLine.getKind());
 		}
 		if(!alreadyMuted){
 			binaryOperatorLine.setKind(binaryOperatorContainer.get(nbrTentativeRestante));
 			lastKindMuted = binaryOperatorContainer.get(nbrTentativeRestante);
 			nbrTentativeRestante--;
-			nbrTentativeRestanteParCtBinaryOperator.put(generateIdentifier(binaryOperatorLine),nbrTentativeRestante);
+			nbrTentativeRestanteParCtBinaryOperator.put(identifiant,nbrTentativeRestante);
 			alreadyMuted = true;
-			lastMuted = generateIdentifier(binaryOperatorLine);
+			lastMuted = identifiant;
 		}
 	}
 	
@@ -141,8 +143,9 @@ public class BinaryOperatorProcessor extends AbstractProcessor<CtBinaryOperator<
 	private int generateIdentifier(CtBinaryOperator<?> operator){
 		int longueurMembreGauche = operator.getLeftHandOperand().toString().length();
 		int longueurMembreDroite = operator.getRightHandOperand().toString().length();
-		int longueur = operator.getLeftHandOperand().toString().charAt(longueurMembreGauche-1)+operator.getRightHandOperand().toString().charAt(longueurMembreDroite-1);
-		return operator.getPosition().hashCode()+longueur+operator.toString().split(" ").length;
+		Integer longueur = operator.getLeftHandOperand().toString().charAt(longueurMembreGauche-1)+operator.getRightHandOperand().toString().charAt(longueurMembreDroite-1);
+		System.out.println((operator.getPosition().hashCode()+longueur.hashCode()+(operator.toString().split(" ").length))+(longueur.hashCode()));
+		return (operator.getPosition().hashCode()+longueur.hashCode())+(operator.toString().split(" ").length)+longueur.hashCode();
 	}
 
 	private boolean checkAllMuted() {

@@ -204,13 +204,14 @@ public class Main {
 					}
 				}
 				//on lance spoon une derniere fois pour que les meilleurs mutations trouvees soient restorees
-				deleteClassFiles(repertoireClasseName);
+//				deleteClassFiles(repertoireClasseName);
 				//launchSpoon(repertoireName, binaryOperatorProcessor);
-				launchSpoon(folder, binaryOperatorProcessor);
+				//launchSpoon(folder, binaryOperatorProcessor);
 
 			}
 			int nbrfailFinal = testLauncher.runTests(whiteTestCurrent,repertoireClasseName);
-			addResultToFile(folder,nbrFailInit,nbrfailFinal);
+			if(nbrfailFinal != nbrFailInit)
+				addResultToFile(folder,nbrFailInit,nbrfailFinal);
 			if(i >= LIMITE_NBR_PROJECT_FOR_DEV)
 				break;
 			i++;
