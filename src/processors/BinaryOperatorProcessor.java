@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+
 import spoon.processing.AbstractProcessor;
 import spoon.reflect.code.BinaryOperatorKind;
 import spoon.reflect.code.CtBinaryOperator;
@@ -138,8 +139,7 @@ public class BinaryOperatorProcessor extends AbstractProcessor<CtBinaryOperator<
 		int longueurMembreGauche = operator.getLeftHandOperand().toString().length();
 		int longueurMembreDroite = operator.getRightHandOperand().toString().length();
 		int longueur = operator.getLeftHandOperand().toString().charAt(longueurMembreGauche-1)+operator.getRightHandOperand().toString().charAt(longueurMembreDroite-1);
-
-		return operator.getPosition().hashCode()+longueur;
+		return operator.getPosition().hashCode()+longueur+operator.toString().split(" ").length;
 	}
 
 	private boolean checkAllMuted() {
