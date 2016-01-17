@@ -17,6 +17,14 @@ import spoon.processing.AbstractProcessor;
 public class Main {
 
 	private static final String INPUT_DATASET = ".." + File.separator + "IntroClassJava" + File.separator + "dataset";
+	private static final String INPUT_DATASET_CHECKSUM = INPUT_DATASET+File.separator+"checksum";
+	private static final String INPUT_DATASET_DIGITS = INPUT_DATASET+File.separator+"digits";
+	private static final String INPUT_DATASET_GRADE = INPUT_DATASET+File.separator+"grade";
+	private static final String INPUT_DATASET_MEDIAN = INPUT_DATASET+File.separator+"median";
+	private static final String INPUT_DATASET_SMALLEST = INPUT_DATASET+File.separator+"smallest";
+	private static final String INPUT_DATASET_SYLLABLES= INPUT_DATASET+File.separator+"syllables";
+
+
 	private static final String WHITEBOX_TEST = "WhiteboxTest";
 //	private static final String BLACKBOX_TEST = "BlackboxTest";
 	private static final String SPOON_REPERTOIRE= "spooned";
@@ -35,11 +43,17 @@ public class Main {
 	private static void launchSpoon(String projectPath, AbstractProcessor<?> p) throws Exception{
 		
 		String repertoireCible = projectPath;
+		String repertoireDestinationClasse = "";
 		String pattern = Pattern.quote(File.separator);
-		if(projectPath.split(pattern).length > 2){
+		String [] repertoireSplit = projectPath.split(pattern);
+		if(repertoireSplit.length > 2){
 			repertoireCible = SPOON_REPERTOIRE+File.separator+generateRepertoireName(projectPath);
+			repertoireDestinationClasse = SPOON_CLASS_REPERTOIRE+File.separator+generateRepertoireName(projectPath);
+		}else{
+			repertoireDestinationClasse = SPOON_CLASS_REPERTOIRE+File.separator+repertoireSplit[repertoireSplit.length-1];
+			
 		}
-		String[] spoonArgs = { "-i", projectPath, "--compile", "-o", repertoireCible};
+		String[] spoonArgs = { "-i", projectPath, "--compile", "-o", repertoireCible, "-d" ,repertoireDestinationClasse };
 		
 			Launcher l = new Launcher();
 			if(p!=null){
@@ -94,11 +108,13 @@ public class Main {
 	
 	private static void deleteClassFiles(String path){
 		File[] files = new File(path).listFiles();
-		for(File f : files){
-			if(!f.isDirectory() && f.getName().contains(".class"))
-				f.delete();
-			else if(f.isDirectory())
-				deleteClassFiles(f.getAbsolutePath());
+		if(files != null){
+			for(File f : files){
+				if(!f.isDirectory() && f.getName().contains(".class"))
+					f.delete();
+				else if(f.isDirectory())
+					deleteClassFiles(f.getAbsolutePath());
+			}
 		}
 		
 	}
@@ -152,45 +168,69 @@ public class Main {
 	public static void main(String[] args) throws Exception {
 		
 		long start = System.currentTimeMillis();
-		final Integer LIMITE_NBR_PROJECT_FOR_DEV = 3;
+		final Integer LIMITE_NBR_PROJECT_FOR_DEV = 1800;
 		TestLauncher testLauncher = new TestLauncher();
 		listProcessors.add(new BinaryOperatorProcessor());
 		listProcessors.add(new IntMutatorProcessor());
 		addDateToFile();
 		
-		List<String> sourceFolders = findSourceFolder(INPUT_DATASET);
-
+		List<String> sourceFolders = findSourceFolder(INPUT_DATASET_DIGITS);
 		int i = 1;
 
 		for(String folder : sourceFolders){
+			//on reinitialise les attributs static du processeur pour eviter d'interferer entre les projets
+			BinaryOperatorProcessor.raz();
+			
 			String repertoireName = SPOON_REPERTOIRE+File.separator+generateRepertoireName(folder);
+			String repertoireClasseName = SPOON_CLASS_REPERTOIRE+File.separator+generateRepertoireName(folder);
 			String whiteTestCurrent = getWhiteTestClassNameFromProject(folder);
-			deleteClassFiles(SPOON_CLASS_REPERTOIRE);
+			deleteClassFiles(repertoireClasseName);
 			launchSpoon(folder,null);
+<<<<<<< HEAD
 			System.out.println(">>>> Folder" + folder);
 			int nbrFailInit = testLauncher.runTests(whiteTestCurrent);
 			int lowestFail = nbrFailInit;
 
 			//on reinitialise les attributs static du processeur pour eviter d'interferer entre les projets
 			IntMutatorProcessor.raz((getMainClassNameFromProjectWithoutPackage(folder)));
+=======
+			int nbrFailInit = testLauncher.runTests(whiteTestCurrent,repertoireClasseName);
+			System.out.println("Projet sous test "+folder+" nbr fail init "+nbrFailInit);
+			int lowestFail = nbrFailInit;
+
+>>>>>>> 8f70e8bf08219ba0171f2d2d40931080f47d7952
 			if(lowestFail > 0){
 				//tant qu il reste des possiblites de mutation on boucle sur les projets generes par spoon
 				while(BinaryOperatorProcessor.terminated != true){
 					BinaryOperatorProcessor.alreadyMuted = false;
+<<<<<<< HEAD
 					deleteClassFiles(repertoireName);
 					launchSpoon(repertoireName, intMutatorProcessor);
+=======
+					deleteClassFiles(repertoireClasseName);
+					//launchSpoon(repertoireName, binaryOperatorProcessor);
+					launchSpoon(folder, binaryOperatorProcessor);
+>>>>>>> 8f70e8bf08219ba0171f2d2d40931080f47d7952
 
-					int nbrFailAfterSpoon = testLauncher.runTests(whiteTestCurrent);
+					int nbrFailAfterSpoon = testLauncher.runTests(whiteTestCurrent,repertoireClasseName);
 					if(nbrFailAfterSpoon < lowestFail){
+						System.out.println("correction detectee !" +nbrFailAfterSpoon+ " < "+lowestFail);
 						lowestFail = nbrFailAfterSpoon;
 						IntMutatorProcessor.better = true;
 					}
 				}
 				//on lance spoon une derniere fois pour que les meilleurs mutations trouvees soient restorees
+<<<<<<< HEAD
 				deleteClassFiles(repertoireName);
 				launchSpoon(repertoireName, intMutatorProcessor);
+=======
+				deleteClassFiles(repertoireClasseName);
+				//launchSpoon(repertoireName, binaryOperatorProcessor);
+				launchSpoon(folder, binaryOperatorProcessor);
+
+>>>>>>> 8f70e8bf08219ba0171f2d2d40931080f47d7952
 			}
-			int nbrfailFinal = testLauncher.runTests(whiteTestCurrent);
+			int nbrfailFinal = testLauncher.runTests(whiteTestCurrent,repertoireClasseName);
 			addResultToFile(folder,nbrFailInit,nbrfailFinal);
 			if(i >= LIMITE_NBR_PROJECT_FOR_DEV)
 				break;
