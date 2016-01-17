@@ -88,7 +88,7 @@ public class Main {
 		
 		return pathToSources;
 	}
-	
+
 	/*Permet de recuperer tous les fichiers java d un projet ou uniquement le fichier de nom classUnderTest il n'est pas null*/
 	private static List<String> findJavaFiles(String path, String classUnderTest){
 		File[] files = new File(path).listFiles();
@@ -173,7 +173,7 @@ public class Main {
 		listProcessors.add(new IntMutatorProcessor());
 		addDateToFile();
 		
-		List<String> sourceFolders = findSourceFolder(INPUT_DATASET_CHECKSUM);
+		List<String> sourceFolders = findSourceFolder(INPUT_DATASET_SMALLEST);
 		int i = 1;
 
 		for(String folder : sourceFolders){
@@ -204,13 +204,14 @@ public class Main {
 					}
 				}
 				//on lance spoon une derniere fois pour que les meilleurs mutations trouvees soient restorees
-				deleteClassFiles(repertoireClasseName);
+//				deleteClassFiles(repertoireClasseName);
 				//launchSpoon(repertoireName, binaryOperatorProcessor);
-				launchSpoon(folder, binaryOperatorProcessor);
+				//launchSpoon(folder, binaryOperatorProcessor);
 
 			}
 			int nbrfailFinal = testLauncher.runTests(whiteTestCurrent,repertoireClasseName);
-			addResultToFile(folder,nbrFailInit,nbrfailFinal);
+			if(nbrfailFinal != nbrFailInit)
+				addResultToFile(folder,nbrFailInit,nbrfailFinal);
 			if(i >= LIMITE_NBR_PROJECT_FOR_DEV)
 				break;
 			i++;
