@@ -173,7 +173,7 @@ public class Main {
 		listProcessors.add(new IntMutatorProcessor());
 		addDateToFile();
 		
-		List<String> sourceFolders = findSourceFolder(INPUT_DATASET_CHECKSUM);
+		List<String> sourceFolders = findSourceFolder(INPUT_DATASET_MEDIAN);
 		int i = 1;
 
 		for(String folder : sourceFolders){

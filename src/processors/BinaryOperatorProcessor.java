@@ -80,11 +80,9 @@ public class BinaryOperatorProcessor extends AbstractProcessor<CtBinaryOperator<
 		}
 		
 		if(checkAllMuted()){
-			System.out.println(bestBinaryOperator);
 			List<CtBinaryOperator<?>> listeBinaryOperator = Query.getElements(parent, new TypeFilter<>(CtBinaryOperator.class));
 			if(listeBinaryOperator != null){
 				for(CtBinaryOperator<?> binaryOperator : listeBinaryOperator){
-					//System.out.println(binaryOperator+" "+generateIdentifier(binaryOperator)+" "+bestBinaryOperator.get(generateIdentifier(binaryOperator)));
 					BinaryOperatorKind operateur = bestBinaryOperator.get(generateIdentifier(binaryOperator));
 					if(operateur != null){
 						binaryOperator.setKind(operateur);
@@ -144,7 +142,6 @@ public class BinaryOperatorProcessor extends AbstractProcessor<CtBinaryOperator<
 		int longueurMembreGauche = operator.getLeftHandOperand().toString().length();
 		int longueurMembreDroite = operator.getRightHandOperand().toString().length();
 		Integer longueur = operator.getLeftHandOperand().toString().charAt(longueurMembreGauche-1)+operator.getRightHandOperand().toString().charAt(longueurMembreDroite-1);
-		System.out.println((operator.getPosition().hashCode()+longueur.hashCode()+(operator.toString().split(" ").length))+(longueur.hashCode()));
 		return (operator.getPosition().hashCode()+longueur.hashCode())+(operator.toString().split(" ").length)+longueur.hashCode();
 	}
 
