@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import parameters.IntValues;
-import parameters.NumericLiteralFilter;
+//import parameters.NumericLiteralFilter;
 import spoon.processing.AbstractProcessor;
 import spoon.reflect.code.BinaryOperatorKind;
 import spoon.reflect.code.CtAssignment;
@@ -63,7 +63,7 @@ public class IntMutatorProcessor extends AbstractProcessor<CtClass<?>> {
 				intValuePosition = 0;
 				prevValue = null;
 //				literals = Query.getElements(c, new TypeFilter<CtLiteral<Integer>>(CtLiteral.class));
-				literals = Query.getElements(c, new NumericLiteralFilter());
+//				literals = Query.getElements(c, new NumericLiteralFilter());
 				variables = Query.getElements(c, new TypeFilter<CtAssignment<?,?>>(CtAssignment.class));
 //				System.out.println(literals);
 				System.out.println(variables);
