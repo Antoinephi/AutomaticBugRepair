@@ -33,7 +33,8 @@ public class Main {
 	private static final String PACKAGE ="introclassJava.";
 	private static final String FILE_RESULT_NAME ="result.txt";
 	private static BinaryOperatorProcessor binaryOperatorProcessor = new BinaryOperatorProcessor();
-	
+	private static IntMutatorProcessor intMutatorProcessor = new IntMutatorProcessor();
+			
 	public static List<String> listSourceFiles;
 	public static List<String> listTestFiles;
 	
@@ -185,30 +186,49 @@ public class Main {
 			String whiteTestCurrent = getWhiteTestClassNameFromProject(folder);
 			deleteClassFiles(repertoireClasseName);
 			launchSpoon(folder,null);
+<<<<<<< HEAD
+			System.out.println(">>>> Folder" + folder);
+			int nbrFailInit = testLauncher.runTests(whiteTestCurrent);
+			int lowestFail = nbrFailInit;
+
+			//on reinitialise les attributs static du processeur pour eviter d'interferer entre les projets
+			IntMutatorProcessor.raz((getMainClassNameFromProjectWithoutPackage(folder)));
+=======
 			int nbrFailInit = testLauncher.runTests(whiteTestCurrent,repertoireClasseName);
 			System.out.println("Projet sous test "+folder+" nbr fail init "+nbrFailInit);
 			int lowestFail = nbrFailInit;
 
+>>>>>>> 8f70e8bf08219ba0171f2d2d40931080f47d7952
 			if(lowestFail > 0){
 				//tant qu il reste des possiblites de mutation on boucle sur les projets generes par spoon
 				while(BinaryOperatorProcessor.terminated != true){
 					BinaryOperatorProcessor.alreadyMuted = false;
+<<<<<<< HEAD
+					deleteClassFiles(repertoireName);
+					launchSpoon(repertoireName, intMutatorProcessor);
+=======
 					deleteClassFiles(repertoireClasseName);
 					//launchSpoon(repertoireName, binaryOperatorProcessor);
 					launchSpoon(folder, binaryOperatorProcessor);
+>>>>>>> 8f70e8bf08219ba0171f2d2d40931080f47d7952
 
 					int nbrFailAfterSpoon = testLauncher.runTests(whiteTestCurrent,repertoireClasseName);
 					if(nbrFailAfterSpoon < lowestFail){
 						System.out.println("correction detectee !" +nbrFailAfterSpoon+ " < "+lowestFail);
 						lowestFail = nbrFailAfterSpoon;
-						BinaryOperatorProcessor.better = true;
+						IntMutatorProcessor.better = true;
 					}
 				}
 				//on lance spoon une derniere fois pour que les meilleurs mutations trouvees soient restorees
+<<<<<<< HEAD
+				deleteClassFiles(repertoireName);
+				launchSpoon(repertoireName, intMutatorProcessor);
+=======
 				deleteClassFiles(repertoireClasseName);
 				//launchSpoon(repertoireName, binaryOperatorProcessor);
 				launchSpoon(folder, binaryOperatorProcessor);
 
+>>>>>>> 8f70e8bf08219ba0171f2d2d40931080f47d7952
 			}
 			int nbrfailFinal = testLauncher.runTests(whiteTestCurrent,repertoireClasseName);
 			addResultToFile(folder,nbrFailInit,nbrfailFinal);
