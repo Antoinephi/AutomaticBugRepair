@@ -84,7 +84,10 @@ public class BinaryOperatorProcessor extends AbstractProcessor<CtBinaryOperator<
 			List<CtBinaryOperator<?>> listeBinaryOperator = Query.getElements(parent, new TypeFilter<>(CtBinaryOperator.class));
 			if(listeBinaryOperator != null){
 				for(CtBinaryOperator<?> binaryOperator : listeBinaryOperator){
-					binaryOperator.setKind(bestBinaryOperator.get(generateIdentifier(binaryOperator)));
+					BinaryOperatorKind operateur = bestBinaryOperator.get(generateIdentifier(binaryOperator));
+					if(operateur != null){
+						binaryOperator.setKind(operateur);
+					}
 				}
 			}
 			return;
@@ -98,7 +101,7 @@ public class BinaryOperatorProcessor extends AbstractProcessor<CtBinaryOperator<
 			
 			if(binaryOperatorBoolean.contains(binaryOperatorLine.getKind())){
 				nextMutation(binaryOperatorLine, binaryOperatorBoolean);
-			}else if(binaryOperatorNumber.contains(binaryOperatorLine.getKind())){
+			}else if(binaryOperatorNumber.contains(binaryOperatorLine.getKind()) && !(binaryOperatorLine.getLeftHandOperand().getType().getActualClass().equals(String.class))){
 				nextMutation(binaryOperatorLine, binaryOperatorNumber);
 			}else if(binaryOperatorLogic.contains(binaryOperatorLine.getKind())){
 				nextMutation(binaryOperatorLine, binaryOperatorLogic);
