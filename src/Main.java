@@ -26,7 +26,7 @@ public class Main {
 
 
 	private static final String WHITEBOX_TEST = "WhiteboxTest";
-//	private static final String BLACKBOX_TEST = "BlackboxTest";
+	private static final String BLACKBOX_TEST = "BlackboxTest";
 	private static final String SPOON_REPERTOIRE= "spooned";
 	private static final String SPOON_CLASS_REPERTOIRE="spooned-classes";
 	private static final String END_TEST_NAME = "Test.java";
@@ -129,6 +129,17 @@ public class Main {
 		return null;
 	}
 	
+	public static String getBlackTestClassNameFromProject(String sourcePath){
+		List<String> tests = findJavaFiles(sourcePath + "/test/java",null);
+		for(String test : tests){
+			if(test.contains(BLACKBOX_TEST)){
+				return convertToClassName(test);
+			}
+		}
+		
+		return null;
+	}
+	
 	public static String getMainClassNameFromProjectWithoutPackage(String sourcePath){
 		String whiteTest = getWhiteTestClassNameFromProject(sourcePath);
 		return whiteTest.replace(WHITEBOX_TEST, "").replace(PACKAGE, "");
@@ -173,20 +184,30 @@ public class Main {
 		listProcessors.add(new IntMutatorProcessor());
 		addDateToFile();
 		
-		List<String> sourceFolders = findSourceFolder(INPUT_DATASET_SMALLEST);
+		List<String> sourceFolders =  findSourceFolder(INPUT_DATASET_DIGITS);//
+		
+//		sourceFolders.add("/home/m2iagl/once/Documents/wk-spoon/IntroClassJava/dataset/digits/d5059e2b1493f91b32bb0c2c846d8461c50356f709a91792b6b625e112675de4edac2a09fa627d58c4651c662bbcf2c477660469b9327ed9427b43c25e4e070c/000/src");
+//		sourceFolders.add("/home/m2iagl/once/Documents/wk-spoon/IntroClassJava/dataset/digits/c5d8f924b86adfeafa7f520559aeb8bd0c3c178efe2500c4054c5ce51bcdbfc2da2e3d9fd5c73f559a7cb6c3b3555b04646111404744496cbcf31caa90e5beb4/003/src");
+//		sourceFolders.add("/home/m2iagl/once/Documents/wk-spoon/IntroClassJava/dataset/median/3b2376ab97bb5d1a5dbbf2b45cf062db320757549c761936d19df05e856de894e45695014cd8063cdc22148b13fa1803b3c9e77356931d66f4fbec0efacf7829/003/src");
+//		sourceFolders.add("/home/m2iagl/once/Documents/wk-spoon/IntroClassJava/dataset/grade/bfad6d21d636def8e9e72910c3eb0815f5747669e3a60fb10c6f7f421082d18e548dcfc5d4717bb6da075c36f067b37858d11528ce796b3226ae33719c5007ce/001/src");
+//		sourceFolders.add("/home/m2iagl/once/Documents/wk-spoon/IntroClassJava/dataset/grade/bfad6d21d636def8e9e72910c3eb0815f5747669e3a60fb10c6f7f421082d18e548dcfc5d4717bb6da075c36f067b37858d11528ce796b3226ae33719c5007ce/000/src");
+//		sourceFolders.add("/home/m2iagl/once/Documents/wk-spoon/IntroClassJava/dataset/grade/b1924d63a2e25b7c8d9a794093c4ae97fdceec9e0ea46b6a4b02d9a18b9ba9cecf07cb0c42c264a0947aec22b0bacff788a547a8250c2265f601581ab545bf82/003/src");
+//		sourceFolders.add("/home/m2iagl/once/Documents/wk-spoon/IntroClassJava/dataset/grade/b1924d63a2e25b7c8d9a794093c4ae97fdceec9e0ea46b6a4b02d9a18b9ba9cecf07cb0c42c264a0947aec22b0bacff788a547a8250c2265f601581ab545bf82/001/src");
+				//findSourceFolder(INPUT_DATASET_SYLLABLES);
 		int i = 1;
 
 		for(String folder : sourceFolders){
 			//on reinitialise les attributs static du processeur pour eviter d'interferer entre les projets
 			BinaryOperatorProcessor.raz();
 			
-			String repertoireName = SPOON_REPERTOIRE+File.separator+generateRepertoireName(folder);
 			String repertoireClasseName = SPOON_CLASS_REPERTOIRE+File.separator+generateRepertoireName(folder);
 			String whiteTestCurrent = getWhiteTestClassNameFromProject(folder);
+			String blackTestCurrent = getBlackTestClassNameFromProject(folder);
 			deleteClassFiles(repertoireClasseName);
 			launchSpoon(folder,null);
 			int nbrFailInit = testLauncher.runTests(whiteTestCurrent,repertoireClasseName);
 			System.out.println("Projet sous test "+folder+" nbr fail init "+nbrFailInit);
+
 			int lowestFail = nbrFailInit;
 
 			if(lowestFail > 0){
@@ -203,15 +224,17 @@ public class Main {
 						BinaryOperatorProcessor.better = true;
 					}
 				}
-				//on lance spoon une derniere fois pour que les meilleurs mutations trouvees soient restorees
-//				deleteClassFiles(repertoireClasseName);
-				//launchSpoon(repertoireName, binaryOperatorProcessor);
-				//launchSpoon(folder, binaryOperatorProcessor);
 
 			}
 			int nbrfailFinal = testLauncher.runTests(whiteTestCurrent,repertoireClasseName);
-			if(nbrfailFinal != nbrFailInit)
-				addResultToFile(folder,nbrFailInit,nbrfailFinal);
+			if(nbrFailInit != 0 && nbrfailFinal == 0){
+				int nbrBlackFail = testLauncher.runTests(blackTestCurrent, repertoireClasseName);
+				if(nbrBlackFail == 0){
+					addResultToFile(folder+" black and white done ",nbrFailInit,nbrfailFinal);
+				}else{
+					addResultToFile(folder+" white done ",nbrFailInit,nbrfailFinal);
+				}
+			}
 			if(i >= LIMITE_NBR_PROJECT_FOR_DEV)
 				break;
 			i++;
